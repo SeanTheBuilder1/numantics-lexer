@@ -8,14 +8,14 @@ def placeholderRecognizer(state: LexerTokenTypeState, character: str):
 
 def identifierRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
-        if character.isalpha():
+        if character.isalpha() or character == "_":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q1":
-        if character.isalnum():
+        if character.isalnum() or character == "_":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
