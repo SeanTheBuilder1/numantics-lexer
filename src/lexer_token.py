@@ -1,0 +1,67 @@
+from dataclasses import dataclass
+from enum import Enum, auto
+
+
+class TokenType(Enum):
+    IDENTIFIER = 0
+    WHITESPACE = auto()
+    COMMENT = auto()
+    ARITHMETIC_OP = auto()
+    UNARY_OP = auto()
+    RELATIONAL_OP = auto()
+    LOGICAL_OP = auto()
+    ASSIGMENT_OP = auto()
+    NUMANTICS_OP = auto()
+    INT_TYPE = auto()
+    FLOAT_TYPE = auto()
+    BOOL_TYPE = auto()
+    CHAR_TYPE = auto()
+    STRING_TYPE = auto()
+    IF_STATEMENT = auto()
+    ELSE_STATEMENT = auto()
+    ELIF_STATEMENT = auto()
+    FOR_LOOP = auto()
+    WHILE_LOOP = auto()
+    SCAN_FUNCTION = auto()
+    PRINT_FUNCTION = auto()
+    NEXT_STATEMENT = auto()
+    STOP_STATEMENT = auto()
+    RETURN_STATEMENT = auto()
+    FUNC_STATEMENT = auto()
+    CONST_STATEMENT = auto()
+    STATIC_STATEMENT = auto()
+    DEFAULT_STATEMENT = auto()
+    CASE_STATEMENT = auto()
+    TRUE_LITERAL = auto()
+    FALSE_LITERAL = auto()
+    SWEEP_STATEMENT = auto()
+    RANGE_STATEMENT = auto()
+    JUMP_STATEMENT = auto()
+    SWITCH_STATEMENT = auto()
+    INT_LITERAL = auto()
+    FLOAT_LITERAL = auto()
+    CHAR_LITERAL = auto()
+    STRING_LITERAL = auto()
+    PERCENT_TYPE = auto()
+    XPERCENT_TYPE = auto()
+    POSITIVE_TYPE = auto()
+    NEGATIVE_TYPE = auto()
+    NONZERO_TYPE = auto()
+    EVEN_TYPE = auto()
+    ODD_TYPE = auto()
+    AUTO_TYPE = auto()
+    TIME_TYPE = auto()
+    LENGTH_TYPE = auto()
+    VOLUME_TYPE = auto()
+    MASS_TYPE = auto()
+    TEMP_TYPE = auto()
+    FORCE_TYPE = auto()
+    COMPOUNT_UNIT_TYPE = auto()
+    INVALID = auto()
+
+
+@dataclass
+class Token:
+    type: TokenType
+    start: int
+    end: int
