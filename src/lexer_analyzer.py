@@ -84,6 +84,35 @@ recognizer_list[TokenType.MASS_TYPE.value] = recognizers.placeholderRecognizer
 recognizer_list[TokenType.TEMP_TYPE.value] = recognizers.placeholderRecognizer
 recognizer_list[TokenType.FORCE_TYPE.value] = recognizers.placeholderRecognizer
 recognizer_list[TokenType.COMPOUNT_UNIT_TYPE.value] = recognizers.placeholderRecognizer
+recognizer_list[TokenType.COMMA_DELIMITER.value] = recognizers.commaDelimiterRecognizer
+recognizer_list[TokenType.SEMI_COLON_DELIMITER.value] = (
+    recognizers.semiColonDelimiterRecognizer
+)
+recognizer_list[TokenType.COLON_DELIMITER.value] = recognizers.colonDelimiterRecognizer
+recognizer_list[TokenType.OPEN_PARENTHESIS_DELIMITER.value] = (
+    recognizers.openParenthesisDelimiterRecognizer
+)
+recognizer_list[TokenType.CLOSED_PARENTHESIS_DELIMITER.value] = (
+    recognizers.closedParenthesisDelimiterRecognizer
+)
+recognizer_list[TokenType.OPEN_SQUARE_DELIMITER.value] = (
+    recognizers.openSquareDelimiterRecognizer
+)
+recognizer_list[TokenType.CLOSED_SQUARE_DELIMITER.value] = (
+    recognizers.closedSquareDelimiterRecognizer
+)
+recognizer_list[TokenType.OPEN_ANGLE_DELIMITER.value] = (
+    recognizers.openAngleDelimiterRecognizer
+)
+recognizer_list[TokenType.CLOSED_ANGLE_DELIMITER.value] = (
+    recognizers.closedAngleDelimiterRecognizer
+)
+recognizer_list[TokenType.HYPHEN_DELIMITER.value] = (
+    recognizers.hyphenDelimiterRecognizer
+)
+recognizer_list[TokenType.VERTICAL_BAR_DELIMITER.value] = (
+    recognizers.verticalBarDelimiterRecognizer
+)
 
 
 def analyzeSource(code: str):

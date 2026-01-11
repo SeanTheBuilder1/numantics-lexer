@@ -1712,3 +1712,135 @@ def autoTypeRecognizer(state: LexerTokenTypeState, character: str):
         return state
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
     return state
+
+
+def commaDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == ",":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def semiColonDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == ";":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def colonDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == ":":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def openParenthesisDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "(":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def closedParenthesisDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == ")":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def openSquareDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "[":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def closedSquareDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "]":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def openAngleDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "<":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def closedAngleDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == ">":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def hyphenDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "-":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def verticalBarDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "|":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state

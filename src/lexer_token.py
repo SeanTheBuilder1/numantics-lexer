@@ -57,6 +57,17 @@ class TokenType(Enum):
     TEMP_TYPE = auto()
     FORCE_TYPE = auto()
     COMPOUNT_UNIT_TYPE = auto()
+    COMMA_DELIMITER = auto()
+    SEMI_COLON_DELIMITER = auto()
+    COLON_DELIMITER = auto()
+    OPEN_PARENTHESIS_DELIMITER = auto()
+    CLOSED_PARENTHESIS_DELIMITER = auto()
+    OPEN_SQUARE_DELIMITER = auto()
+    CLOSED_SQUARE_DELIMITER = auto()
+    OPEN_ANGLE_DELIMITER = auto()
+    CLOSED_ANGLE_DELIMITER = auto()
+    HYPHEN_DELIMITER = auto()
+    VERTICAL_BAR_DELIMITER = auto()
     INVALID = auto()
 
 
