@@ -81,6 +81,7 @@ button.primary { background:#0b74de; color:white; border-color:#0a6cc9; }
     <div style="margin-top:8px;">
       <button id="analyze-btn" class="primary">Analyze</button>
       <button id="clear-btn">Clear</button>
+      <button id="save-btn">Save Token Table</button>
     </div>
   </div>
 
@@ -160,6 +161,7 @@ def get_tokens(code):
   const highlightEl = document.getElementById('highlight');
   const analyzeBtn = document.getElementById('analyze-btn');
   const clearBtn = document.getElementById('clear-btn');
+  const saveBtn = document.getElementById('save-btn');
   const tokenTableEl = document.getElementById('token-table');
   const tooltip = document.getElementById('tooltip');
 
@@ -196,7 +198,9 @@ def get_tokens(code):
     pyodide.globals.set("__code",code);
     const tokens=await pyodide.runPythonAsync('get_tokens(__code)');
     pyodide.globals.delete("__code");
+    
     const jsTokens=tokens.toJs({dict:true});
+    window.tokens = jsTokens
     renderHighlight(code,jsTokens);
     updateTokenTable(code,jsTokens);
   }
@@ -206,6 +210,16 @@ def get_tokens(code):
     sourceEl.value='';
     highlightEl.innerHTML='';
     tokenTableEl.innerHTML='';
+  };
+  saveBtn.onclick=()=>{
+    if (!window.tokens) return alert("Run lexer first!");
+    const blob = new Blob([JSON.stringify(window.tokens)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "token_table.json";
+    a.click();
+    URL.revokeObjectURL(url);  
   };
 
   // tooltip
