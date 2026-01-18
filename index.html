@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lexer Visualizer — Background Highlight</title>
+
+<style>
+body { font-family: monospace; margin: 12px; }
+.app { display: grid; grid-template-columns: 1fr 1fr; gap:12px; height: calc(100vh-24px); }
+textarea { width:100%; height:80vh; font-family:inherit; font-size:14px; }
+#highlight { width:100%; height:80vh; overflow:auto; padding:8px; white-space:pre-wrap; background:#1e1e2f; border-radius:6px; color:#f8f8f2; }
+.tok {
+    border-radius: 0px;
+    padding: 0 3px;
+    margin: 0 1px;
+    font-weight: 500;
+}
+
+.WHITESPACE { background: white; }
+.IDENTIFIER { background: blue; }
+.INVALID { background: #ff7b7b; color: black; }
+
+.INT_LITERAL { background: #b8f49b; color: #1e1e2f; }
+.FLOAT_LITERAL { background: #b8f49b; color: #1e1e2f; }
+.CHAR_LITERAL { background: #ffd59e; color: #1e1e2f; }
+.STRING_LITERAL { background: #ffd59e; color: #1e1e2f; }
+.TRUE_LITERAL,
+.FALSE_LITERAL { background: #c9a4ff; color: #1e1e2f; }
+
+.INT_TYPE, .FLOAT_TYPE, .BOOL_TYPE, .CHAR_TYPE, .STRING_TYPE { background: #ffdd88; color: #1e1e2f; }
+.PERCENT_TYPE, .XPERCENT_TYPE, .POSITIVE_TYPE, .NEGATIVE_TYPE, .NONZERO_TYPE { background: #ffd4d4; color: #1e1e2f; }
+
+.SECOND_TYPE, .MINUTE_TYPE, .HOUR_TYPE, .DAY_TYPE, .WEEK_TYPE, .MONTH_TYPE, .YEAR_TYPE { background: #a3d5ff; color: #1e1e2f; }
+
+.METER_TYPE, .MM_TYPE, .CM_TYPE, .KM_TYPE, .FT_TYPE, .INCH_TYPE { background: #b3ffd9; color: #1e1e2f; }
+
+.LITER_TYPE, .ML_TYPE, .CL_TYPE, .KL_TYPE { background: #ffb3ff; color: #1e1e2f; }
+
+.GRAM_TYPE, .MG_TYPE, .CG_TYPE, .KG_TYPE { background: #ffd9a3; color: #1e1e2f; }
+
+.CELC_TYPE, .FAHR_TYPE, .KELV_TYPE, .NEWT_TYPE { background: #ffa3a3; color: #1e1e2f; }
+
+.KGF_TYPE, .LBF_TYPE { background: #d9a3ff; color: #1e1e2f; }
+
+.MPS_TYPE, .FPS_TYPE, .MPS2_TYPE { background: #a3ffd9; color: #1e1e2f; }
+
+.IF_STATEMENT, .ELSE_STATEMENT, .ELIF_STATEMENT, .FOR_LOOP, .WHILE_LOOP,
+.NEXT_STATEMENT, .STOP_STATEMENT, .RETURN_STATEMENT, .FUNC_STATEMENT,
+.CONST_STATEMENT, .STATIC_STATEMENT, .DEFAULT_STATEMENT, .CASE_STATEMENT,
+.SWEEP_STATEMENT, .RANGE_STATEMENT, .JUMP_STATEMENT, .SWITCH_STATEMENT {
+    background: #c9a4ff; color: #1e1e2f;
+}
+
+.ARITHMETIC_OP, .UNARY_OP, .RELATIONAL_OP, .LOGICAL_OP, .ASSIGMENT_OP, .NUMANTICS_OP {
+    background: #ff9aa2; color: #1e1e2f;
+}
+
+.COMMA_DELIMITER, .SEMI_COLON_DELIMITER, .COLON_DELIMITER,
+.OPEN_PARENTHESIS_DELIMITER, .CLOSED_PARENTHESIS_DELIMITER,
+.OPEN_SQUARE_DELIMITER, .CLOSED_SQUARE_DELIMITER,
+.OPEN_ANGLE_DELIMITER, .CLOSED_ANGLE_DELIMITER,
+.HYPHEN_DELIMITER, .VERTICAL_BAR_DELIMITER {
+    background: #e0e0e0; color: #1e1e2f;
+}
+
+.COMMENT { background: #7b8a92; color: white; font-style: italic; }
+
+#tooltip { position:fixed; display:none; pointer-events:none; background:#111; color:white; padding:6px 10px; border-radius:6px; font-size:12px; z-index:999; }
+button { padding:6px 10px; border-radius:6px; border:1px solid #ccc; cursor:pointer; margin-right:4px; }
+button.primary { background:#0b74de; color:white; border-color:#0a6cc9; }
+</style>
+</head>
+<body>
+
+<h3>Lexer Visualizer — Background Highlight</h3>
+
+<div class="app">
+  <div>
+    <textarea id="source" placeholder="Type code here…"></textarea>
+    <div style="margin-top:8px;">
+      <button id="analyze-btn" class="primary">Analyze</button>
+      <button id="clear-btn">Clear</button>
+    </div>
+  </div>
+
+  <div>
+    <pre id="highlight"></pre>
+    <div id="token-table" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+<script>
+(async()=>{
+  const pyodide = await loadPyodide();
+  await pyodide.FS.mkdir("/src")
+  async function loadPythonFile(url, vfsPath) {
+    const resp = await fetch(url)
+    const code = await resp.text()
+    pyodide.FS.writeFile(vfsPath, code)
+  }
+  await loadPythonFile("./src/lexer_analyzer.py", "/src/lexer_analyzer.py")
+  await loadPythonFile("./src/lexer_token.py", "/src/lexer_token.py")
+  await loadPythonFile("./src/lexer_recognizers.py", "/src/lexer_recognizers.py")
+  await loadPythonFile("./src/lexer_types.py", "/src/lexer_types.py")
+
+
+
+  pyodide.runPython(`
+import sys
+sys.path.append("/src")
+`)
+
+
+  await pyodide.runPythonAsync(`
+from lexer_analyzer import analyzeSource
+def build_line_starts(text: str):
+    line_starts = [0]
+    for i, c in enumerate(text):
+        if c == \"\\n\":
+            line_starts.append(i + 1)
+    return line_starts
+
+def index_to_line_col_batch(idx: int, line_starts: list[int]):
+    low, high = 0, len(line_starts) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if line_starts[mid] <= idx:
+            low = mid + 1
+        else:
+            high = mid - 1
+    line = high + 1
+    col = idx - line_starts[high] + 1
+    return line, col
+
+def get_tokens(code):
+    tokens = analyzeSource(code)
+    token_list = []
+    line_starts = build_line_starts(code)
+    for t in tokens:
+        start_line, start_col = index_to_line_col_batch(t.start, line_starts)
+        end_line, end_col = index_to_line_col_batch(t.end, line_starts)
+        token_list.append({
+            'type': str(t.type.name),
+            'start': int(t.start),
+            'end': int(t.end),
+            'start_line': start_line,
+            'start_col': start_col,
+            'end_line': end_line,
+            'end_col': end_col,
+        })
+    return token_list
+  `);
+
+  const sourceEl = document.getElementById('source');
+  const highlightEl = document.getElementById('highlight');
+  const analyzeBtn = document.getElementById('analyze-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  const tokenTableEl = document.getElementById('token-table');
+  const tooltip = document.getElementById('tooltip');
+
+  function escapeHtml(s){return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+
+  function renderHighlight(code,tokens){
+    let out=''; let last=0;
+    for(const t of tokens){
+      const s=Math.max(0,Math.min(code.length,t.start));
+      const e=Math.max(0,Math.min(code.length,t.end));
+      if(s>last) out+=escapeHtml(code.slice(last,s));
+      const snippet=escapeHtml(code.slice(s,e));
+      const cls=String(t.type).replace(/[^A-Za-z0-9_\-]/g,'_');
+      out+=`<span class="tok ${cls}" data-type="${escapeHtml(t.type)}">${snippet}</span>`;
+      last=e;
+    }
+    out+=escapeHtml(code.slice(last));
+    highlightEl.innerHTML=out;
+  }
+
+  function updateTokenTable(code,tokens){
+    if(!tokens||tokens.length===0){tokenTableEl.innerHTML='<div style="color:#888">No tokens</div>';return;}
+      let rows=['<table><thead><tr><th>#</th><th>Type</th><th>Start</th><th>End</th><th>Line:Column</th><th>Text</th></tr></thead><tbody>'];
+    tokens.forEach((t,i)=>{
+      const txt=escapeHtml(code.slice(t.start,t.end)).replaceAll(' ','␣').replaceAll('\n','\\n');
+        rows.push(`<tr><td>${i}</td><td>${t.type}</td><td>${t.start}</td><td>${t.end}</td><td>${t.start_line}:${t.start_col}</td><td>${txt}</td></tr>`);
+    });
+    rows.push('</tbody></table>');
+    tokenTableEl.innerHTML=rows.join('');
+  }
+
+  async function analyze(){
+    const code=sourceEl.value;
+    pyodide.globals.set("__code",code);
+    const tokens=await pyodide.runPythonAsync('get_tokens(__code)');
+    pyodide.globals.delete("__code");
+    const jsTokens=tokens.toJs({dict:true});
+    renderHighlight(code,jsTokens);
+    updateTokenTable(code,jsTokens);
+  }
+
+  analyzeBtn.onclick=analyze;
+  clearBtn.onclick=()=>{
+    sourceEl.value='';
+    highlightEl.innerHTML='';
+    tokenTableEl.innerHTML='';
+  };
+
+  // tooltip
+  let locked=false;
+  function hasSelection(){const s=window.getSelection();return s&&s.toString().length>0;}
+  highlightEl.addEventListener('mouseover',ev=>{
+    if(locked||hasSelection()){tooltip.style.display='none';return;}
+    const tok=ev.target.closest('.tok'); if(!tok) return;
+    tooltip.innerHTML=`<b>${tok.dataset.type}</b>`;
+    tooltip.style.left=(ev.clientX+12)+'px';
+    tooltip.style.top=(ev.clientY+12)+'px';
+    tooltip.style.display='block';
+  });
+  highlightEl.addEventListener('mousemove',ev=>{
+    if(tooltip.style.display==='none'||locked||hasSelection()){tooltip.style.display='none';return;}
+    tooltip.style.left=(ev.clientX+12)+'px';
+    tooltip.style.top=(ev.clientY+12)+'px';
+  });
+  highlightEl.addEventListener('mouseout',ev=>{if(locked)return;tooltip.style.display='none';});
+  highlightEl.addEventListener('click',ev=>{
+    const tok=ev.target.closest('.tok'); if(!tok) return;
+    locked=!locked;
+    if(locked){
+      tooltip.innerHTML=`<b>${tok.dataset.type}</b>`;
+      const r=tok.getBoundingClientRect();
+      tooltip.style.left=(r.right+8)+'px';
+      tooltip.style.top=(r.top)+'px';
+      tooltip.style.display='block';
+    }else tooltip.style.display='none';
+  });
+})();
+</script>
+</body>
+</html>
