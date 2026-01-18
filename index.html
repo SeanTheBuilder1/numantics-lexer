@@ -151,6 +151,7 @@ def get_tokens(code):
             'start_col': start_col,
             'end_line': end_line,
             'end_col': end_col,
+            'lexeme': code[t.start:t.end],
         })
     return token_list
   `);
