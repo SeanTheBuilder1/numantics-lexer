@@ -1471,7 +1471,7 @@ def stringLiteralRecognizer(state: LexerTokenTypeState, character: str):
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         elif character != "\n":
             state.current_state = "q1"
-            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
