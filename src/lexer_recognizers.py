@@ -1417,6 +1417,7 @@ def floatLiteralRecognizer(state: LexerTokenTypeState, character: str):
     return state
 
 
+# For now accept char literal with n > 1, syntax analyzer's job
 def charLiteralRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "'":
@@ -1429,27 +1430,22 @@ def charLiteralRecognizer(state: LexerTokenTypeState, character: str):
         if character == "\\":
             state.current_state = "q2"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character != "'" and character != "\n":
+        elif character == "'":
             state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        elif character != "\n":
+            state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q2":
         if character != "\n":
-            state.current_state = "q3"
+            state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
-    if state.current_state == "q3":
-        if character == "'":
-            state.current_state = "q4"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        else:
-            state.acceptance = LexerTokenTypeAcceptState.REJECTED
-        return state
-
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
     return state
 
