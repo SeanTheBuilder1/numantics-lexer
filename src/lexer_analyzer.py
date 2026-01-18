@@ -143,31 +143,7 @@ def analyzeSource(code: str):
     start_index = 0
     current_state = getFreshLexer()
 
-    index = 0
-    while index < len(code):
-        valid_states: list[TokenType] = []
-        for state_index in range(len(current_state)):
-            type = TokenType(state_index)
-            state = current_state[state_index]
-
-            if state.acceptance == LexerTokenTypeAcceptState.REJECTED:
-                continue
-            state = recognizer_list[type.value](state, code[index])
-            # print(state, type)
-
-            if state.acceptance == LexerTokenTypeAcceptState.ACCEPTED:
-                state.end_at = index
-            if state.acceptance != LexerTokenTypeAcceptState.REJECTED:
-                valid_states.append(type)
-            current_state[state_index] = state
-        # print()
-        # print(index)
-        # print(valid_states)
-        # print(tokens)
-        if valid_states:
-            index += 1
-            continue
-
+    def pickLongestState(current_state):
         longest = -1
         longest_type = TokenType.INVALID
         for state_index in range(len(current_state)):
@@ -181,16 +157,54 @@ def analyzeSource(code: str):
                 longest = state.end_at
                 longest_type = type
         if longest == -1 or longest_type == TokenType.INVALID:
-            tokens.append(Token(longest_type, start_index, index))
-            start_index = index + 1
+            return (None, TokenType.INVALID)
+        else:
+            return (longest, longest_type)
+
+    index = 0
+    while index < len(code):
+        valid_states: list[TokenType] = []
+        for state_index in range(len(current_state)):
+            type = TokenType(state_index)
+            state = current_state[state_index]
+
+            if state.acceptance == LexerTokenTypeAcceptState.REJECTED:
+                continue
+            state = recognizer_list[type.value](state, code[index])
+            # print(state, type)
+
+            if state.acceptance == LexerTokenTypeAcceptState.ACCEPTED:
+                state.end_at = index + 1
+            if state.acceptance != LexerTokenTypeAcceptState.REJECTED:
+                valid_states.append(type)
+            current_state[state_index] = state
+        # print()
+        # print(index)
+        # print(valid_states)
+        # print(tokens)
+        if valid_states:
+            index += 1
+            continue
+
+        longest_end, longest_type = pickLongestState(current_state)
+        if longest_end is None or longest_type == TokenType.INVALID:
+            invalid_start = start_index if start_index == index else index
+            tokens.append(Token(longest_type, invalid_start, invalid_start + 1))
+            start_index = invalid_start + 1
             index = start_index
             current_state = getFreshLexer()
             continue
-        tokens.append(
-            Token(longest_type, start_index, current_state[longest_type.value].end_at)
-        )
-        start_index = current_state[longest_type.value].end_at + 1
+        tokens.append(Token(longest_type, start_index, longest_end))
+        start_index = longest_end
         index = start_index
         current_state = getFreshLexer()
+
+    # Potentially cut off state
+    longest_end, longest_type = pickLongestState(current_state)
+    if longest_end is None or longest_type == TokenType.INVALID:
+        if start_index < len(code):
+            tokens.append(Token(longest_type, start_index, len(code)))
+    else:
+        tokens.append(Token(longest_type, start_index, longest_end))
 
     return tokens
