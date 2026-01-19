@@ -213,7 +213,7 @@ def get_tokens(code):
   };
   saveBtn.onclick=()=>{
     if (!window.tokens) return alert("Run lexer first!");
-    const blob = new Blob([JSON.stringify(window.tokens)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(window.tokens, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
