@@ -2,6 +2,7 @@ from lexer_types import LexerTokenTypeState, LexerTokenTypeAcceptState
 
 
 def placeholderRecognizer(state: LexerTokenTypeState, character: str):
+    del character
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
     return state
 
