@@ -6,89 +6,190 @@
 <title>Numantics Lexer</title>
 
 <style>
-body { font-family: monospace; margin: 12px; }
-.app { display: grid; grid-template-columns: 1fr 1fr; gap:12px; height: calc(100vh-24px); }
-textarea { width:100%; height:80vh; font-family:inherit; font-size:14px; }
-#highlight { width:100%; height:80vh; overflow:auto; padding:8px; white-space:pre-wrap; background:#1e1e2f; border-radius:6px; color:#f8f8f2; }
-.tok {
-    border-radius: 0px;
-    padding: 0 3px;
-    margin: 0 1px;
-    font-weight: 500;
-}
+    body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        background-color: #0f111a;
+        color: white;
+        overflow-x: hidden;
+    }
 
-.WHITESPACE { background: white; }
-.IDENTIFIER { background: blue; }
-.INVALID { background: #ff7b7b; color: black; }
+    header {
+        background: linear-gradient(90deg, #020024 0%, #090979 35%, #002aff 100%);
+        padding: 20px 30px;
+        display: flex;
+        align-items: center;
+        border-bottom: 3px solid #1e00ff;
+    }
 
-.INT_LITERAL { background: #b8f49b; color: #1e1e2f; }
-.FLOAT_LITERAL { background: #b8f49b; color: #1e1e2f; }
-.CHAR_LITERAL { background: #ffd59e; color: #1e1e2f; }
-.STRING_LITERAL { background: #ffd59e; color: #1e1e2f; }
-.TRUE_LITERAL,
-.FALSE_LITERAL { background: #c9a4ff; color: #1e1e2f; }
+    .logo-img {
+        height: 80px;
+        width: auto;
+        margin-right: 30px;
+        display: block;
+    }
 
-.INT_TYPE, .FLOAT_TYPE, .BOOL_TYPE, .CHAR_TYPE, .STRING_TYPE { background: #ffdd88; color: #1e1e2f; }
-.PERCENT_TYPE, .XPERCENT_TYPE, .POSITIVE_TYPE, .NEGATIVE_TYPE, .NONZERO_TYPE { background: #ffd4d4; color: #1e1e2f; }
+    header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
 
-.SECOND_TYPE, .MINUTE_TYPE, .HOUR_TYPE, .DAY_TYPE, .WEEK_TYPE, .MONTH_TYPE, .YEAR_TYPE { background: #a3d5ff; color: #1e1e2f; }
+    .controls-row {
+        background-color: #12141e;
+        padding: 15px 40px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
 
-.METER_TYPE, .MM_TYPE, .CM_TYPE, .KM_TYPE, .FT_TYPE, .INCH_TYPE { background: #b3ffd9; color: #1e1e2f; }
+    .label-text {
+        font-weight: 900;
+        font-size: 20px;
+        letter-spacing: 2px;
+    }
 
-.LITER_TYPE, .ML_TYPE, .CL_TYPE, .KL_TYPE { background: #ffb3ff; color: #1e1e2f; }
+    .label-output {
+        margin-left: auto;
+    }
 
-.GRAM_TYPE, .MG_TYPE, .CG_TYPE, .KG_TYPE { background: #ffd9a3; color: #1e1e2f; }
+    .app-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 0 40px;
+        align-items: start;
+    }
 
-.CELC_TYPE, .FAHR_TYPE, .KELV_TYPE, .NEWT_TYPE { background: #ffa3a3; color: #1e1e2f; }
+    textarea, #highlight {
+        width: 100%;
+        height: 550px;
+        border-radius: 25px;
+        padding: 25px;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 15px;
+        box-sizing: border-box;
+        margin: 0;
+    }
 
-.KGF_TYPE, .LBF_TYPE { background: #d9a3ff; color: #1e1e2f; }
+    textarea {
+        background: white;
+        color: black;
+        border: 4px solid #3d2bff;
+        resize: none;
+        outline: none;
+    }
 
-.MPS_TYPE, .FPS_TYPE, .MPS2_TYPE { background: #a3ffd9; color: #1e1e2f; }
+    #highlight {
+        background: #1a1d2b;
+        border: 2px solid #3d2bff;
+        overflow: auto;
+        white-space: pre-wrap;
+        color: #f8f8f2;
+        position: relative;
+    }
 
-.IF_STATEMENT, .ELSE_STATEMENT, .ELIF_STATEMENT, .FOR_LOOP, .WHILE_LOOP,
-.NEXT_STATEMENT, .STOP_STATEMENT, .RETURN_STATEMENT, .FUNC_STATEMENT,
-.CONST_STATEMENT, .STATIC_STATEMENT, .DEFAULT_STATEMENT, .CASE_STATEMENT,
-.SWEEP_STATEMENT, .RANGE_STATEMENT, .JUMP_STATEMENT, .SWITCH_STATEMENT {
-    background: #c9a4ff; color: #1e1e2f;
-}
+    button {
+        padding: 6px 22px;
+        border-radius: 20px;
+        border: 1px solid white;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
 
-.ARITHMETIC_OP, .UNARY_OP, .RELATIONAL_OP, .LOGICAL_OP, .ASSIGMENT_OP, .NUMANTICS_OP {
-    background: #ff9aa2; color: #1e1e2f;
-}
+    button#analyze-btn {
+        background: #1e00ff;
+        border: 1px solid #1e00ff;
+    }
 
-.COMMA_DELIMITER, .SEMI_COLON_DELIMITER, .COLON_DELIMITER,
-.OPEN_PARENTHESIS_DELIMITER, .CLOSED_PARENTHESIS_DELIMITER,
-.OPEN_SQUARE_DELIMITER, .CLOSED_SQUARE_DELIMITER,
-.OPEN_ANGLE_DELIMITER, .CLOSED_ANGLE_DELIMITER,
-.HYPHEN_DELIMITER, .VERTICAL_BAR_DELIMITER {
-    background: #e0e0e0; color: #1e1e2f;
-}
+    button:hover {
+        background: rgba(255,255,255,0.1);
+    }
 
-.COMMENT { background: #7b8a92; color: white; font-style: italic; }
+    #tooltip {
+        position: fixed;
+        display: none;
+        pointer-events: none;
+        background: #000000;
+        color: #ffffff;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 900;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        z-index: 9999;
+        border: 1px solid rgba(255,255,255,0.1);
+        white-space: nowrap;
+    }
 
-#tooltip { position:fixed; display:none; pointer-events:none; background:#111; color:white; padding:6px 10px; border-radius:6px; font-size:12px; z-index:999; }
-button { padding:6px 10px; border-radius:6px; border:1px solid #ccc; cursor:pointer; margin-right:4px; }
-button.primary { background:#0b74de; color:white; border-color:#0a6cc9; }
+    .tok { border-radius: 0px; padding: 0 2px; cursor: help; }
+    .WHITESPACE { background: transparent; }
+    .IDENTIFIER { background: #3b82f6; color: white; }
+    .INVALID { background: #ff7b7b; color: black; }
+    .INT_LITERAL, .FLOAT_LITERAL { background: #b8f49b; color: #1e1e2f; }
+    .CHAR_LITERAL, .STRING_LITERAL { background: #ffd59e; color: #1e1e2f; }
+    .TRUE_LITERAL, .FALSE_LITERAL { background: #c9a4ff; color: #1e1e2f; }
+    .INT_TYPE, .FLOAT_TYPE, .BOOL_TYPE, .CHAR_TYPE, .STRING_TYPE { background: #ffdd88; color: #1e1e2f; }
+    .PERCENT_TYPE, .XPERCENT_TYPE, .POSITIVE_TYPE, .NEGATIVE_TYPE, .NONZERO_TYPE { background: #ffd4d4; color: #1e1e2f; }
+
+    .SECOND_TYPE, .MINUTE_TYPE, .HOUR_TYPE, .DAY_TYPE, .WEEK_TYPE, .MONTH_TYPE, .YEAR_TYPE { background: #a3d5ff; color: #1e1e2f; }
+    .METER_TYPE, .MM_TYPE, .CM_TYPE, .KM_TYPE, .FT_TYPE, .INCH_TYPE { background: #b3ffd9; color: #1e1e2f; }
+    .LITER_TYPE, .ML_TYPE, .CL_TYPE, .KL_TYPE { background: #ffb3ff; color: #1e1e2f; }
+    .GRAM_TYPE, .MG_TYPE, .CG_TYPE, .KG_TYPE { background: #ffd9a3; color: #1e1e2f; }
+    .CELC_TYPE, .FAHR_TYPE, .KELV_TYPE, .NEWT_TYPE { background: #ffa3a3; color: #1e1e2f; }
+    .KGF_TYPE, .LBF_TYPE { background: #d9a3ff; color: #1e1e2f; }
+    .MPS_TYPE, .FPS_TYPE, .MPS2_TYPE { background: #a3ffd9; color: #1e1e2f; }
+
+    .IF_STATEMENT, .ELSE_STATEMENT, .ELIF_STATEMENT, .FOR_LOOP, .WHILE_LOOP,
+    .NEXT_STATEMENT, .STOP_STATEMENT, .RETURN_STATEMENT, .FUNC_STATEMENT,
+    .CONST_STATEMENT, .STATIC_STATEMENT, .DEFAULT_STATEMENT, .CASE_STATEMENT,
+    .SWEEP_STATEMENT, .RANGE_STATEMENT, .JUMP_STATEMENT, .SWITCH_STATEMENT { background: #c9a4ff; color: #1e1e2f; }
+
+    .ARITHMETIC_OP, .UNARY_OP, .RELATIONAL_OP, .LOGICAL_OP, .ASSIGMENT_OP, .NUMANTICS_OP { background: #ff9aa2; color: #1e1e2f; }
+
+    .COMMA_DELIMITER, .SEMI_COLON_DELIMITER, .COLON_DELIMITER, .OPEN_PARENTHESIS_DELIMITER, .CLOSED_PARENTHESIS_DELIMITER,
+    .OPEN_SQUARE_DELIMITER, .CLOSED_SQUARE_DELIMITER, .OPEN_ANGLE_DELIMITER, .CLOSED_ANGLE_DELIMITER,
+    .HYPHEN_DELIMITER, .VERTICAL_BAR_DELIMITER { background: #e0e0e0; color: #1e1e2f; }
+
+    .COMMENT { background: #7b8a92; color: white; font-style: italic; }
+
+    .table-section { margin: 50px 0; text-align: center; }
+    .table-section h2 { text-transform: uppercase; letter-spacing: 2px; margin-bottom: 25px; }
+    table { width: 90%; margin: 0 auto; border-collapse: collapse; border: 1px solid #1e00ff; background: #12141e; }
+    th, td { border: 1px solid #1e00ff; padding: 12px; text-align: center; font-size: 14px; }
+    th { background: #090979; color: white; text-transform: uppercase; }
 </style>
 </head>
 <body>
 
-<h3>Numantics Lexer</h3>
+<header>
+    <img src="logo.png" alt="Numantics Logo" class="logo-img">
+    <h1>NUMANTICS LEXER</h1>
+</header>
 
-<div class="app">
-  <div>
-    <textarea id="source" placeholder="Type code here…"></textarea>
-    <div style="margin-top:8px;">
-      <button id="analyze-btn" class="primary">Analyze</button>
-      <button id="clear-btn">Clear</button>
-      <button id="save-btn">Save Token Table</button>
-    </div>
-  </div>
+<div class="controls-row">
+    <span class="label-text">INPUT</span>
+    <button id="analyze-btn">Analyze</button>
+    <button id="clear-btn">Clear</button>
+    <button id="save-btn">Save Table</button>
+    <span class="label-text label-output">OUTPUT</span>
+</div>
 
-  <div>
+<div class="app-container">
+    <textarea id="source" placeholder="Type code here..."></textarea>
     <pre id="highlight"></pre>
-    <div id="token-table" style="margin-top:8px;"></div>
-  </div>
+</div>
+
+<div class="table-section">
+    <h2>TOKEN TABLE</h2>
+    <div id="token-table"></div>
 </div>
 
 <div id="tooltip"></div>
@@ -99,29 +200,23 @@ button.primary { background:#0b74de; color:white; border-color:#0a6cc9; }
   const pyodide = await loadPyodide();
   await pyodide.FS.mkdir("/src")
   async function loadPythonFile(url, vfsPath) {
-    const resp = await fetch(url)
-    const code = await resp.text()
-    pyodide.FS.writeFile(vfsPath, code)
+    const resp = await fetch(url);
+    const code = await resp.text();
+    pyodide.FS.writeFile(vfsPath, code);
   }
-  await loadPythonFile("./src/lexer_analyzer.py", "/src/lexer_analyzer.py")
-  await loadPythonFile("./src/lexer_token.py", "/src/lexer_token.py")
-  await loadPythonFile("./src/lexer_recognizers.py", "/src/lexer_recognizers.py")
-  await loadPythonFile("./src/lexer_types.py", "/src/lexer_types.py")
+  await loadPythonFile("./src/lexer_analyzer.py", "/src/lexer_analyzer.py");
+  await loadPythonFile("./src/lexer_token.py", "/src/lexer_token.py");
+  await loadPythonFile("./src/lexer_recognizers.py", "/src/lexer_recognizers.py");
+  await loadPythonFile("./src/lexer_types.py", "/src/lexer_types.py");
 
-
-
-  pyodide.runPython(`
-import sys
-sys.path.append("/src")
-`)
-
+  pyodide.runPython(`import sys\nsys.path.append("/src")`);
 
   await pyodide.runPythonAsync(`
 from lexer_analyzer import analyzeSource
 def build_line_starts(text: str):
     line_starts = [0]
     for i, c in enumerate(text):
-        if c == \"\\n\":
+        if c == "\\n":
             line_starts.append(i + 1)
     return line_starts
 
@@ -184,10 +279,10 @@ def get_tokens(code):
 
   function updateTokenTable(code,tokens){
     if(!tokens||tokens.length===0){tokenTableEl.innerHTML='<div style="color:#888">No tokens</div>';return;}
-      let rows=['<table><thead><tr><th>#</th><th>Type</th><th>Start</th><th>End</th><th>Line:Column</th><th>Text</th></tr></thead><tbody>'];
+    let rows=['<table><thead><tr><th>#</th><th>Type</th><th>Start</th><th>End</th><th>Line:Column</th><th>Text</th></tr></thead><tbody>'];
     tokens.forEach((t,i)=>{
       const txt=escapeHtml(code.slice(t.start,t.end)).replaceAll(' ','␣').replaceAll('\n','\\n');
-        rows.push(`<tr><td>${i}</td><td>${t.type}</td><td>${t.start}</td><td>${t.end}</td><td>${t.start_line}:${t.start_col}</td><td>${txt}</td></tr>`);
+      rows.push(`<tr><td>${i}</td><td>${t.type}</td><td>${t.start}</td><td>${t.end}</td><td>${t.start_line}:${t.start_col}</td><td>${txt}</td></tr>`);
     });
     rows.push('</tbody></table>');
     tokenTableEl.innerHTML=rows.join('');
@@ -198,57 +293,54 @@ def get_tokens(code):
     pyodide.globals.set("__code",code);
     const tokens=await pyodide.runPythonAsync('get_tokens(__code)');
     pyodide.globals.delete("__code");
-    
     const jsTokens=tokens.toJs({dict:true});
-    window.tokens = jsTokens
+    window.tokens = jsTokens;
     renderHighlight(code,jsTokens);
     updateTokenTable(code,jsTokens);
   }
 
   analyzeBtn.onclick=analyze;
-  clearBtn.onclick=()=>{
-    sourceEl.value='';
-    highlightEl.innerHTML='';
-    tokenTableEl.innerHTML='';
-  };
+  clearBtn.onclick=()=>{ sourceEl.value=''; highlightEl.innerHTML=''; tokenTableEl.innerHTML=''; };
   saveBtn.onclick=()=>{
     if (!window.tokens) return alert("Run lexer first!");
     const blob = new Blob([JSON.stringify(window.tokens, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "token_table.json";
-    a.click();
-    URL.revokeObjectURL(url);  
+    a.href = url; a.download = "token_table.json"; a.click();
+    URL.revokeObjectURL(url);
   };
 
-  // tooltip
   let locked=false;
   function hasSelection(){const s=window.getSelection();return s&&s.toString().length>0;}
-  highlightEl.addEventListener('mouseover',ev=>{
-    if(locked||hasSelection()){tooltip.style.display='none';return;}
-    const tok=ev.target.closest('.tok'); if(!tok) return;
-    tooltip.innerHTML=`<b>${tok.dataset.type}</b>`;
-    tooltip.style.left=(ev.clientX+12)+'px';
-    tooltip.style.top=(ev.clientY+12)+'px';
-    tooltip.style.display='block';
+
+  highlightEl.addEventListener('mouseover', ev => {
+    if(locked||hasSelection()) return;
+    const tok = ev.target.closest('.tok');
+    if (!tok) return;
+    tooltip.innerHTML = `<b>${tok.dataset.type}</b>`;
+    tooltip.style.display = 'block';
   });
-  highlightEl.addEventListener('mousemove',ev=>{
-    if(tooltip.style.display==='none'||locked||hasSelection()){tooltip.style.display='none';return;}
-    tooltip.style.left=(ev.clientX+12)+'px';
-    tooltip.style.top=(ev.clientY+12)+'px';
+
+  highlightEl.addEventListener('mousemove', ev => {
+    if (tooltip.style.display === 'block' && !locked) {
+      tooltip.style.left = (ev.clientX - (tooltip.offsetWidth / 2)) + 'px';
+      tooltip.style.top = (ev.clientY - 50) + 'px';
+    }
   });
-  highlightEl.addEventListener('mouseout',ev=>{if(locked)return;tooltip.style.display='none';});
-  highlightEl.addEventListener('click',ev=>{
-    const tok=ev.target.closest('.tok'); if(!tok) return;
-    locked=!locked;
-    if(locked){
-      tooltip.innerHTML=`<b>${tok.dataset.type}</b>`;
-      const r=tok.getBoundingClientRect();
-      tooltip.style.left=(r.right+8)+'px';
-      tooltip.style.top=(r.top)+'px';
-      tooltip.style.display='block';
-    }else tooltip.style.display='none';
+
+  highlightEl.addEventListener('mouseout', () => { if(!locked) tooltip.style.display = 'none'; });
+
+  highlightEl.addEventListener('click', ev => {
+    const tok = ev.target.closest('.tok');
+    if (!tok) return;
+    locked = !locked;
+    if (locked) {
+      tooltip.innerHTML = `<b>${tok.dataset.type}</b>`;
+      const r = tok.getBoundingClientRect();
+      tooltip.style.left = (r.left) + 'px';
+      tooltip.style.top = (r.top - 45) + 'px';
+      tooltip.style.display = 'block';
+    } else tooltip.style.display = 'none';
   });
 })();
 </script>
