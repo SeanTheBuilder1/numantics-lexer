@@ -2872,6 +2872,29 @@ def closedAngleDelimiterRecognizer(state: LexerTokenTypeState, character: str):
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
     return state
 
+def openCurlyDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "{":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def closedCurlyDelimiterRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "}":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
 
 def hyphenDelimiterRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":

@@ -89,6 +89,8 @@ class TokenType(Enum):
     CLOSED_SQUARE_DELIMITER = auto()
     OPEN_ANGLE_DELIMITER = auto()
     CLOSED_ANGLE_DELIMITER = auto()
+    OPEN_CURLY_DELIMITER = auto()
+    CLOSED_CURLY_DELIMITER = auto()
     HYPHEN_DELIMITER = auto()
     VERTICAL_BAR_DELIMITER = auto()
     INVALID = auto()
