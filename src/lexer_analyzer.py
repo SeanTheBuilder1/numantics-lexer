@@ -130,6 +130,12 @@ recognizer_list[TokenType.OPEN_ANGLE_DELIMITER.value] = (
 recognizer_list[TokenType.CLOSED_ANGLE_DELIMITER.value] = (
     recognizers.closedAngleDelimiterRecognizer
 )
+recognizer_list[TokenType.OPEN_CURLY_DELIMITER.value] = (
+    recognizers.openCurlyDelimiterRecognizer
+)
+recognizer_list[TokenType.CLOSED_CURLY_DELIMITER.value] = (
+    recognizers.closedCurlyDelimiterRecognizer
+)
 recognizer_list[TokenType.HYPHEN_DELIMITER.value] = (
     recognizers.hyphenDelimiterRecognizer
 )
