@@ -24,13 +24,48 @@ for x in range(len(TokenType) - 1):  # exclude INVALID
 
 recognizer_list[TokenType.IDENTIFIER.value] = recognizers.identifierRecognizer
 recognizer_list[TokenType.WHITESPACE.value] = recognizers.whitespaceRecognizer
+recognizer_list[TokenType.NEWLINE.value] = recognizers.newlineRecognizer
+recognizer_list[TokenType.INDENT.value] = recognizers.nullRecognizer
+recognizer_list[TokenType.DEDENT.value] = recognizers.nullRecognizer
 recognizer_list[TokenType.COMMENT.value] = recognizers.commentRecognizer
-recognizer_list[TokenType.ARITHMETIC_OP.value] = recognizers.arithmeticOpRecognizer
-recognizer_list[TokenType.UNARY_OP.value] = recognizers.unaryOpRecognizer
-recognizer_list[TokenType.RELATIONAL_OP.value] = recognizers.relationalOpRecognizer
-recognizer_list[TokenType.LOGICAL_OP.value] = recognizers.logicalOpRecognizer
-recognizer_list[TokenType.ASSIGMENT_OP.value] = recognizers.assignmentOpRecognizer
-recognizer_list[TokenType.NUMANTICS_OP.value] = recognizers.numanticsOpRecognizer
+recognizer_list[TokenType.PLUS_SYMBOL.value] = recognizers.plusSymbolRecognizer
+recognizer_list[TokenType.MINUS_SYMBOL.value] = recognizers.minusSymbolRecognizer
+recognizer_list[TokenType.STAR_SYMBOL.value] = recognizers.starSymbolRecognizer
+recognizer_list[TokenType.SLASH_SYMBOL.value] = recognizers.slashSymbolRecognizer
+recognizer_list[TokenType.PERCENT_SYMBOL.value] = recognizers.percentSymbolRecognizer
+recognizer_list[TokenType.CARET_SYMBOL.value] = recognizers.caretSymbolRecognizer
+recognizer_list[TokenType.INCREMENT_OP.value] = recognizers.incrementOpRecognizer
+recognizer_list[TokenType.DECREMENT_OP.value] = recognizers.decrementOpRecognizer
+recognizer_list[TokenType.LESS_OP.value] = recognizers.lessOpRecognizer
+recognizer_list[TokenType.LESS_OR_EQUAL_OP.value] = recognizers.lessOrEqualOpRecognizer
+recognizer_list[TokenType.GREATER_OP.value] = recognizers.greaterOpRecognizer
+recognizer_list[TokenType.GREATER_OR_EQUAL_OP.value] = (
+    recognizers.greaterOrEqualOpRecognizer
+)
+recognizer_list[TokenType.NOT_EQUAL_OP.value] = recognizers.notEqualOpRecognizer
+recognizer_list[TokenType.EQUAL_OP.value] = recognizers.equalOpRecognizer
+recognizer_list[TokenType.NOT_OP.value] = recognizers.notOpRecognizer
+recognizer_list[TokenType.AND_OP.value] = recognizers.andOpRecognizer
+recognizer_list[TokenType.OR_OP.value] = recognizers.orOpRecognizer
+recognizer_list[TokenType.ASSIGNMENT_OP.value] = recognizers.assignmentOpRecognizer
+recognizer_list[TokenType.PLUS_ASSIGNMENT_OP.value] = (
+    recognizers.plusAssignmentOpRecognizer
+)
+recognizer_list[TokenType.MINUS_ASSIGNMENT_OP.value] = (
+    recognizers.minusAssignmentOpRecognizer
+)
+recognizer_list[TokenType.MULTIPLY_ASSIGNMENT_OP.value] = (
+    recognizers.multiplyAssignmentOpRecognizer
+)
+recognizer_list[TokenType.DIVIDE_ASSIGNMENT_OP.value] = (
+    recognizers.divideAssignmentOpRecognizer
+)
+recognizer_list[TokenType.MODULO_ASSIGNMENT_OP.value] = (
+    recognizers.moduloAssignmentOpRecognizer
+)
+recognizer_list[TokenType.PERCENT_SCALE_OP.value] = recognizers.percentScaleOpRecognizer
+recognizer_list[TokenType.MARKUP_OP.value] = recognizers.markupOpRecognizer
+recognizer_list[TokenType.MARKDOWN_OP.value] = recognizers.markdownOpRecognizer
 recognizer_list[TokenType.INT_TYPE.value] = recognizers.intTypeRecognizer
 recognizer_list[TokenType.FLOAT_TYPE.value] = recognizers.floatTypeRecognizer
 recognizer_list[TokenType.BOOL_TYPE.value] = recognizers.boolTypeRecognizer
@@ -136,9 +171,6 @@ recognizer_list[TokenType.OPEN_CURLY_DELIMITER.value] = (
 recognizer_list[TokenType.CLOSED_CURLY_DELIMITER.value] = (
     recognizers.closedCurlyDelimiterRecognizer
 )
-recognizer_list[TokenType.HYPHEN_DELIMITER.value] = (
-    recognizers.hyphenDelimiterRecognizer
-)
 recognizer_list[TokenType.VERTICAL_BAR_DELIMITER.value] = (
     recognizers.verticalBarDelimiterRecognizer
 )
@@ -168,7 +200,61 @@ def analyzeSource(code: str):
             return (longest, longest_type)
 
     index = 0
+    line_start = True
+    indent_stack = [0]
+    paren_depth = 0
+
     while index < len(code):
+        if line_start and paren_depth == 0:
+            indent_index = index
+            indent_count = 0
+
+            while indent_index < len(code):
+                if code[indent_index] == " ":
+                    indent_count += 1
+                elif code[indent_index] == "\t":
+                    indent_count += 8 - (indent_count % 8)
+                else:
+                    break
+                indent_index += 1
+
+            if indent_index >= len(code):
+                tokens.append(Token(TokenType.WHITESPACE, start_index, indent_index))
+                index = indent_index + 1
+                start_index = index
+                continue
+
+            if code[indent_index] == "\n":
+                tokens.append(
+                    Token(TokenType.WHITESPACE, start_index, indent_index + 1)
+                )
+                index = indent_index + 1
+                start_index = index
+                continue
+
+            last_indent = indent_stack[-1]
+            if indent_count > last_indent:
+                indent_stack.append(indent_count)
+                if last_indent != 0:
+                    tokens.append(
+                        Token(
+                            TokenType.WHITESPACE, start_index, start_index + last_indent
+                        )
+                    )
+                tokens.append(
+                    Token(TokenType.INDENT, start_index + last_indent, indent_index)
+                )
+            elif indent_count < last_indent:
+                while indent_count < indent_stack[-1]:
+                    indent_stack.pop()
+                    tokens.append(Token(TokenType.DEDENT, start_index, start_index))
+                if indent_stack[-1] != indent_count:
+                    tokens.pop()
+                    tokens.append(Token(TokenType.INVALID, start_index, indent_index))
+            index = indent_index
+            start_index = index
+            line_start = False
+
         valid_states: list[TokenType] = []
         for state_index in range(len(current_state)):
             type = TokenType(state_index)
@@ -177,17 +263,12 @@ def analyzeSource(code: str):
             if state.acceptance == LexerTokenTypeAcceptState.REJECTED:
                 continue
             state = recognizer_list[type.value](state, code[index])
-            # print(state, type)
 
             if state.acceptance == LexerTokenTypeAcceptState.ACCEPTED:
                 state.end_at = index + 1
             if state.acceptance != LexerTokenTypeAcceptState.REJECTED:
                 valid_states.append(type)
             current_state[state_index] = state
-        # print()
-        # print(index)
-        # print(valid_states)
-        # print(tokens)
         if valid_states:
             index += 1
             continue
@@ -200,6 +281,8 @@ def analyzeSource(code: str):
             index = start_index
             current_state = getFreshLexer()
             continue
+        if longest_type == TokenType.NEWLINE:
+            line_start = True
         tokens.append(Token(longest_type, start_index, longest_end))
         start_index = longest_end
         index = start_index
@@ -212,5 +295,10 @@ def analyzeSource(code: str):
             tokens.append(Token(longest_type, start_index, len(code)))
     else:
         tokens.append(Token(longest_type, start_index, longest_end))
+
+    while indent_stack[-1] > 0:
+        last_indent = indent_stack[-1]
+        tokens.append(Token(TokenType.DEDENT, len(code), len(code)))
+        indent_stack.pop()
 
     return tokens

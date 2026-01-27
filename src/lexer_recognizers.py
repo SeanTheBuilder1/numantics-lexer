@@ -1,6 +1,12 @@
 from lexer_types import LexerTokenTypeState, LexerTokenTypeAcceptState
 
 
+def nullRecognizer(state: LexerTokenTypeState, character: str):
+    del character
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
 def placeholderRecognizer(state: LexerTokenTypeState, character: str):
     del character
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
@@ -28,14 +34,26 @@ def identifierRecognizer(state: LexerTokenTypeState, character: str):
 
 def whitespaceRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
-        if character.isspace():
+        if character.isspace() and character != "\n":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q1":
-        if character.isspace():
+        if character.isspace() and character != "\n":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def newlineRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "\n":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
@@ -97,76 +115,139 @@ def commentRecognizer(state: LexerTokenTypeState, character: str):
     return state
 
 
-def arithmeticOpRecognizer(state: LexerTokenTypeState, character: str):
+def plusSymbolRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
-        if character in ["^", "*", "/", "%", "+", "-"]:
+        if character == "+":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
-
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
     return state
 
 
-def unaryOpRecognizer(state: LexerTokenTypeState, character: str):
+def minusSymbolRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
-        if character == "+":
-            state.current_state = "q1"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        elif character == "-":
-            state.current_state = "q2"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        else:
-            state.acceptance = LexerTokenTypeAcceptState.REJECTED
-        return state
-    if state.current_state == "q1":
-        if character == "+":
-            state.current_state = "q3"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        else:
-            state.acceptance = LexerTokenTypeAcceptState.REJECTED
-        return state
-    if state.current_state == "q2":
         if character == "-":
-            state.current_state = "q3"
+            state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
-
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
     return state
 
 
-def relationalOpRecognizer(state: LexerTokenTypeState, character: str):
+def starSymbolRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
-        if character == "=":
+        if character == "*":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def slashSymbolRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "/":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def percentSymbolRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "%":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def caretSymbolRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "^":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def incrementOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "+":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "!":
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "+":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def decrementOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "-":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "<":
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "-":
             state.current_state = "q2"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        elif character == ">":
-            state.current_state = "q2"
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def lessOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "<":
+            state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def lessOrEqualOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "<":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q1":
         if character == "=":
-            state.current_state = "q3"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        else:
-            state.acceptance = LexerTokenTypeAcceptState.REJECTED
-        return state
-    if state.current_state == "q2":
-        if character == "=":
-            state.current_state = "q3"
+            state.current_state = "q2"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
@@ -175,30 +256,117 @@ def relationalOpRecognizer(state: LexerTokenTypeState, character: str):
     return state
 
 
-def logicalOpRecognizer(state: LexerTokenTypeState, character: str):
+def greaterOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == ">":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def greaterOrEqualOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == ">":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "=":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def notEqualOpRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "!":
-            state.current_state = "q3"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        elif character == "&":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "|":
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "=":
             state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def equalOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "=":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "=":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def notOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "!":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def andOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "&":
+            state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q1":
         if character == "&":
-            state.current_state = "q3"
+            state.current_state = "q2"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
-    if state.current_state == "q2":
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def orOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
         if character == "|":
-            state.current_state = "q3"
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "|":
+            state.current_state = "q2"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
@@ -210,21 +378,18 @@ def logicalOpRecognizer(state: LexerTokenTypeState, character: str):
 def assignmentOpRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "=":
-            state.current_state = "q2"
+            state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        elif character == "+":
-            state.current_state = "q1"
-            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "-":
-            state.current_state = "q1"
-            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "*":
-            state.current_state = "q1"
-            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "/":
-            state.current_state = "q1"
-            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "%":
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def plusAssignmentOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "+":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
@@ -241,15 +406,123 @@ def assignmentOpRecognizer(state: LexerTokenTypeState, character: str):
     return state
 
 
-def numanticsOpRecognizer(state: LexerTokenTypeState, character: str):
+def minusAssignmentOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "-":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "=":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def multiplyAssignmentOpRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "*":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "+":
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "=":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def divideAssignmentOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "/":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == "-":
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "=":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def moduloAssignmentOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "%":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "=":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def percentScaleOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "*":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "%":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def markupOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "+":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "%":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def markdownOpRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "-":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
@@ -2872,6 +3145,7 @@ def closedAngleDelimiterRecognizer(state: LexerTokenTypeState, character: str):
     state.acceptance = LexerTokenTypeAcceptState.REJECTED
     return state
 
+
 def openCurlyDelimiterRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "{":
@@ -2887,18 +3161,6 @@ def openCurlyDelimiterRecognizer(state: LexerTokenTypeState, character: str):
 def closedCurlyDelimiterRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "}":
-            state.current_state = "q1"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
-        else:
-            state.acceptance = LexerTokenTypeAcceptState.REJECTED
-        return state
-    state.acceptance = LexerTokenTypeAcceptState.REJECTED
-    return state
-
-
-def hyphenDelimiterRecognizer(state: LexerTokenTypeState, character: str):
-    if state.current_state == "q0":
-        if character == "-":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
