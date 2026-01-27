@@ -31,6 +31,9 @@ def main():
         return
     file = open(sys.argv[1], "r")
     code = file.read()
+    code = code.replace("\r\n", "\n")
+    code = code.replace("\n\r", "\n")
+    code = code.replace("\r", "\n")
     tokens = analyzeSource(code)
     token_list = []
     line_starts = build_line_starts(code)

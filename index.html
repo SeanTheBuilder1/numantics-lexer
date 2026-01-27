@@ -233,6 +233,9 @@ def index_to_line_col_batch(idx: int, line_starts: list[int]):
     return line, col
 
 def get_tokens(code):
+    code = code.replace(\"\\r\\n\", \"\\n\")
+    code = code.replace(\"\\n\\r\", \"\\n\")
+    code = code.replace(\"\\r\", \"\\n\")
     tokens = analyzeSource(code)
     token_list = []
     line_starts = build_line_starts(code)
