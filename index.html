@@ -204,9 +204,9 @@
     const code = await resp.text();
     pyodide.FS.writeFile(vfsPath, code);
   }
+  await loadPythonFile("./src/lexer_recognizers.py", "/src/lexer_recognizers.py");
   await loadPythonFile("./src/lexer_analyzer.py", "/src/lexer_analyzer.py");
   await loadPythonFile("./src/lexer_token.py", "/src/lexer_token.py");
-  await loadPythonFile("./src/lexer_recognizers.py", "/src/lexer_recognizers.py");
   await loadPythonFile("./src/lexer_types.py", "/src/lexer_types.py");
 
   pyodide.runPython(`import sys\nsys.path.append("/src")`);
