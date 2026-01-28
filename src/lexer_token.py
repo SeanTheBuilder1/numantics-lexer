@@ -6,8 +6,6 @@ class TokenType(Enum):
     IDENTIFIER = 0
     WHITESPACE = auto()
     NEWLINE = auto()
-    INDENT = auto()
-    DEDENT = auto()
     COMMENT = auto()
     PLUS_SYMBOL = auto()
     MINUS_SYMBOL = auto()

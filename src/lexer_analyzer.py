@@ -25,8 +25,6 @@ for x in range(len(TokenType) - 1):  # exclude INVALID
 recognizer_list[TokenType.IDENTIFIER.value] = recognizers.identifierRecognizer
 recognizer_list[TokenType.WHITESPACE.value] = recognizers.whitespaceRecognizer
 recognizer_list[TokenType.NEWLINE.value] = recognizers.newlineRecognizer
-recognizer_list[TokenType.INDENT.value] = recognizers.nullRecognizer
-recognizer_list[TokenType.DEDENT.value] = recognizers.nullRecognizer
 recognizer_list[TokenType.COMMENT.value] = recognizers.commentRecognizer
 recognizer_list[TokenType.PLUS_SYMBOL.value] = recognizers.plusSymbolRecognizer
 recognizer_list[TokenType.MINUS_SYMBOL.value] = recognizers.minusSymbolRecognizer
@@ -200,61 +198,8 @@ def analyzeSource(code: str):
             return (longest, longest_type)
 
     index = 0
-    line_start = True
-    indent_stack = [0]
-    paren_depth = 0
 
     while index < len(code):
-        if line_start and paren_depth == 0:
-            indent_index = index
-            indent_count = 0
-
-            while indent_index < len(code):
-                if code[indent_index] == " ":
-                    indent_count += 1
-                elif code[indent_index] == "\t":
-                    indent_count += 8 - (indent_count % 8)
-                else:
-                    break
-                indent_index += 1
-
-            if indent_index >= len(code):
-                tokens.append(Token(TokenType.WHITESPACE, start_index, indent_index))
-                index = indent_index + 1
-                start_index = index
-                continue
-
-            if code[indent_index] == "\n":
-                tokens.append(
-                    Token(TokenType.WHITESPACE, start_index, indent_index + 1)
-                )
-                index = indent_index + 1
-                start_index = index
-                continue
-
-            last_indent = indent_stack[-1]
-            if indent_count > last_indent:
-                indent_stack.append(indent_count)
-                if last_indent != 0:
-                    tokens.append(
-                        Token(
-                            TokenType.WHITESPACE, start_index, start_index + last_indent
-                        )
-                    )
-                tokens.append(
-                    Token(TokenType.INDENT, start_index + last_indent, indent_index)
-                )
-            elif indent_count < last_indent:
-                while indent_count < indent_stack[-1]:
-                    indent_stack.pop()
-                    tokens.append(Token(TokenType.DEDENT, start_index, start_index))
-                if indent_stack[-1] != indent_count:
-                    tokens.pop()
-                    tokens.append(Token(TokenType.INVALID, start_index, indent_index))
-            index = indent_index
-            start_index = index
-            line_start = False
-
         valid_states: list[TokenType] = []
         for state_index in range(len(current_state)):
             type = TokenType(state_index)
@@ -281,8 +226,6 @@ def analyzeSource(code: str):
             index = start_index
             current_state = getFreshLexer()
             continue
-        if longest_type == TokenType.NEWLINE:
-            line_start = True
         tokens.append(Token(longest_type, start_index, longest_end))
         start_index = longest_end
         index = start_index
@@ -296,9 +239,5 @@ def analyzeSource(code: str):
     else:
         tokens.append(Token(longest_type, start_index, longest_end))
 
-    while indent_stack[-1] > 0:
-        last_indent = indent_stack[-1]
-        tokens.append(Token(TokenType.DEDENT, len(code), len(code)))
-        indent_stack.pop()
 
     return tokens
