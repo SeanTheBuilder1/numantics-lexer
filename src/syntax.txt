@@ -1,0 +1,188 @@
+file := (external_declaration)*
+
+external_declaration := | declaration_stmt
+                        | function_stmt
+
+declaration_stmt := declaration SEMI_COLON_DELIMITER
+
+declaration := type IDENTIFIER [ASSIGNMENT_OP expression]
+
+if_stmt := | IF_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block elif_stmt
+           | IF_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block else_stmt
+           | IF_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block
+
+elif_stmt := | ELIF_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block elif_stmt
+             | ELIF_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block else_stmt
+             | ELIF_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block
+
+else_stmt := ELSE_STATEMENT block
+
+switch_stmt := | SWITCH_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER switch_body
+
+switch_body := | OPEN_CURLY_DELIMITER switch_case+ [switch_default] CLOSED_CURLY_DELIMITER
+               | OPEN_CURLY_DELIMITER switch_default CLOSED_CURLY_DELIMITER
+
+switch_case := | CASE_STATEMENT expression COLON_DELIMITER statement
+
+switch_default := | DEFAULT_STATEMENT COLON_DELIMITER statement
+
+while_stmt := | WHILE_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block 
+              | WHILE_STATEMENT OPEN_PARENTHESIS_DELIMITER expression, expression CLOSED_PARENTHESIS_DELIMITER block 
+
+sweep_stmt := | SWEEP_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER sweep_body
+
+sweep_body := | OPEN_CURLY_DELIMITER sweep_case+ [sweep_default] CLOSED_CURLY_DELIMITER
+              | OPEN_CURLY_DELIMITER sweep_default CLOSED_CURLY_DELIMITER
+
+sweep_case := | CASE_STATEMENT expression COLON_DELIMITER statement
+
+sweep_default := | DEFAULT_STATEMENT COLON_DELIMITER statement
+
+while_stmt := | WHILE_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block 
+              | WHILE_STATEMENT OPEN_PARENTHESIS_DELIMITER expression, expression CLOSED_PARENTHESIS_DELIMITER block 
+
+function_stmt := | FUNC_STATEMENT IDENTIFIER OPEN_PARENTHESIS_DELIMITER [parameter_list] VERTICAL_BAR_DELIMITER type CLOSED_PARENTHESIS_DELIMITER block
+
+parameter_list := type IDENTIFIER (COMMA_DELIMITER type IDENTIFIER)*
+
+for_stmt := | FOR_STATEMENT OPEN_PARENTHESIS_DELIMITER declaration SEMI_COLON_DELIMITER expression SEMI_COLON_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block
+            | FOR_STATEMENT OPEN_PARENTHESIS_DELIMITER expression SEMI_COLON_DELIMITER expression SEMI_COLON_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block
+
+block := OPEN_CURLY_DELIMITER (statement)* CLOSED_CURLY_DELIMITER
+
+next_stmt := | NEXT_STATEMENT SEMI_COLON_DELIMITER
+
+stop_stmt := | STOP_STATEMENT SEMI_COLON_DELIMITER
+
+return_stmt := | RETURN_STATEMENT [expression] SEMI_COLON_DELIMITER
+
+statement := | expression_statement
+             | if_stmt
+             | while_stmt
+             | function_stmt
+             | for_stmt
+             | declaration_stmt
+             | block
+             | next_stmt
+             | stop_stmt
+             | return_stmt
+
+type := | builtin_type
+        | modifier_type
+        | compound_type
+
+compound_type := builtin_type OPEN_ANGLE_DELIMITER modifier_type (COMMA_DELIMITER modifier_type)* CLOSED_ANGLE_DELIMITER
+
+builtin_type := | INT_TYPE
+                | FLOAT_TYPE
+                | BOOL_TYPE
+                | CHAR_TYPE
+                | STRING_TYPE
+                | PERCENT_TYPE
+
+modifier_type := | XPERCENT_TYPE
+                 | POSITIVE_TYPE
+                 | NEGATIVE_TYPE
+                 | NONZERO_TYPE
+                 | EVEN_TYPE
+                 | ODD_TYPE
+                 | AUTO_TYPE
+                 | SECOND_TYPE
+                 | MINUTE_TYPE
+                 | HOUR_TYPE
+                 | DAY_TYPE
+                 | WEEK_TYPE
+                 | MONTH_TYPE
+                 | YEAR_TYPE
+                 | METER_TYPE
+                 | MM_TYPE
+                 | CM_TYPE
+                 | KM_TYPE
+                 | FT_TYPE
+                 | INCH_TYPE
+                 | LITER_TYPE
+                 | ML_TYPE
+                 | CL_TYPE
+                 | KL_TYPE
+                 | GRAM_TYPE
+                 | MG_TYPE
+                 | CG_TYPE
+                 | KG_TYPE
+                 | CELC_TYPE
+                 | FAHR_TYPE
+                 | KELV_TYPE
+                 | NEWT_TYPE
+                 | KGF_TYPE
+                 | LBF_TYPE
+                 | MPS_TYPE
+                 | FPS_TYPE
+                 | MPS2_TYPE
+
+expression_statement := expression SEMI_COLON_DELIMITER
+
+expression := numantics_operation
+
+numantics_operation := | numantics_operation PERCENT_SCALE_OP assignment
+                       | numantics_operation MARKUP_OP assignment
+                       | numantics_operation MARKDOWN_OP assignment
+                       | assignment
+
+assignment := or_operation assignment_op assignment | or_operation
+
+assignment_op := | ASSIGNMENT_OP
+                 | PLUS_ASSIGNMENT_OP
+                 | MINUS_ASSIGNMENT_OP
+                 | MULTIPLY_ASSIGNMENT_OP
+                 | DIVIDE_ASSIGNMENT_OP
+                 | MODULO_ASSIGNMENT_OP
+
+or_operation := or_operation OR_OP and_operation | and_operation
+
+and_operation := and_operation AND_OP not_operation | not_operation
+
+not_operation := NOT_OP not_operation | relation
+
+relation := relation relation_op sum | sum
+
+relation_op := | LESS_OP
+               | LESS_OR_EQUAL_OP
+               | GREATER_OP
+               | GREATER_OR_EQUAL_OP
+               | NOT_EQUAL_OP
+               | EQUAL_OP
+
+
+sum := | sum PLUS_SYMBOL term
+       | sum MINUS_SYMBOL term
+       | term
+
+term := | term STAR_SYMBOL factor
+        | term SLASH_SYMBOL factor
+        | term PERCENT_SYMBOL factor
+
+factor := | PLUS_SYMBOL factor
+          | MINUS_SYMBOL factor
+          | power
+
+power := | prefix CARET_SYMBOL power
+         | prefix
+
+prefix := | INCREMENT_OP postfix
+          | DECREMENT_OP postfix
+          | postfix
+
+postfix := | primary INCREMENT_OP
+           | primary DECREMENT_OP
+           | primary
+
+primary := | atom
+           | OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER
+
+atom := | IDENTIFIER
+        | TRUE_LITERAL
+        | FALSE_LITERAL
+        | INT_LITERAL
+        | FLOAT_LITERAL
+        | CHAR_LITERAL
+        | STRING_LITERAL
+
