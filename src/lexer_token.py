@@ -113,6 +113,7 @@ class TokenType(Enum):
     OPEN_CURLY_DELIMITER = auto()
     CLOSED_CURLY_DELIMITER = auto()
     VERTICAL_BAR_DELIMITER = auto()
+    ENDMARKER = auto()
     INVALID = auto()
 
 

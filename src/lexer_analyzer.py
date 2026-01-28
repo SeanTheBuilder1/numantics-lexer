@@ -172,6 +172,7 @@ recognizer_list[TokenType.CLOSED_CURLY_DELIMITER.value] = (
 recognizer_list[TokenType.VERTICAL_BAR_DELIMITER.value] = (
     recognizers.verticalBarDelimiterRecognizer
 )
+recognizer_list[TokenType.ENDMARKER.value] = recognizers.nullRecognizer
 
 
 def analyzeSource(code: str):
@@ -239,5 +240,6 @@ def analyzeSource(code: str):
     else:
         tokens.append(Token(longest_type, start_index, longest_end))
 
+    tokens.append(Token(TokenType.ENDMARKER, len(code), len(code)))
 
     return tokens
