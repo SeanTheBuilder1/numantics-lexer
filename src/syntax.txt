@@ -26,9 +26,6 @@ switch_case := | CASE_STATEMENT expression COLON_DELIMITER statement
 
 switch_default := | DEFAULT_STATEMENT COLON_DELIMITER statement
 
-while_stmt := | WHILE_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block 
-              | WHILE_STATEMENT OPEN_PARENTHESIS_DELIMITER expression, expression CLOSED_PARENTHESIS_DELIMITER block 
-
 sweep_stmt := | SWEEP_STATEMENT OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER sweep_body
 
 sweep_body := | OPEN_CURLY_DELIMITER sweep_case+ [sweep_default] CLOSED_CURLY_DELIMITER
@@ -45,8 +42,8 @@ function_stmt := | FUNC_STATEMENT IDENTIFIER OPEN_PARENTHESIS_DELIMITER [paramet
 
 parameter_list := type IDENTIFIER (COMMA_DELIMITER type IDENTIFIER)*
 
-for_stmt := | FOR_STATEMENT OPEN_PARENTHESIS_DELIMITER declaration SEMI_COLON_DELIMITER expression SEMI_COLON_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block
-            | FOR_STATEMENT OPEN_PARENTHESIS_DELIMITER expression SEMI_COLON_DELIMITER expression SEMI_COLON_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER block
+for_stmt := | FOR_STATEMENT OPEN_PARENTHESIS_DELIMITER [declaration] SEMI_COLON_DELIMITER [expression] SEMI_COLON_DELIMITER [expression] CLOSED_PARENTHESIS_DELIMITER block
+            | FOR_STATEMENT OPEN_PARENTHESIS_DELIMITER [expression] SEMI_COLON_DELIMITER [expression] SEMI_COLON_DELIMITER [expression] CLOSED_PARENTHESIS_DELIMITER block
 
 block := OPEN_CURLY_DELIMITER (statement)* CLOSED_CURLY_DELIMITER
 
@@ -56,8 +53,10 @@ stop_stmt := | STOP_STATEMENT SEMI_COLON_DELIMITER
 
 return_stmt := | RETURN_STATEMENT [expression] SEMI_COLON_DELIMITER
 
-statement := | expression_statement
+statement := | expression_stmt
              | if_stmt
+             | switch_stmt
+             | sweep_stmt
              | while_stmt
              | function_stmt
              | for_stmt
@@ -68,7 +67,6 @@ statement := | expression_statement
              | return_stmt
 
 type := | builtin_type
-        | modifier_type
         | compound_type
 
 compound_type := builtin_type OPEN_ANGLE_DELIMITER modifier_type (COMMA_DELIMITER modifier_type)* CLOSED_ANGLE_DELIMITER
@@ -78,9 +76,9 @@ builtin_type := | INT_TYPE
                 | BOOL_TYPE
                 | CHAR_TYPE
                 | STRING_TYPE
-                | PERCENT_TYPE
 
-modifier_type := | XPERCENT_TYPE
+modifier_type := | PERCENT_TYPE
+                 | XPERCENT_TYPE
                  | POSITIVE_TYPE
                  | NEGATIVE_TYPE
                  | NONZERO_TYPE
@@ -118,7 +116,7 @@ modifier_type := | XPERCENT_TYPE
                  | FPS_TYPE
                  | MPS2_TYPE
 
-expression_statement := expression SEMI_COLON_DELIMITER
+expression_stmt := expression SEMI_COLON_DELIMITER
 
 expression := numantics_operation
 
