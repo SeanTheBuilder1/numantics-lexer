@@ -1,3 +1,13 @@
+from __future__ import annotations
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Any
+
+from lexer_token import Token, TokenType
+from result import Ok, Error, Result
+from line_starts import index_to_line_col_batch
+
+
 class NodeType(Enum):
     IDENTIFIER = 0
     TRUE_LITERAL = auto()
@@ -83,3 +93,39 @@ class NodeType(Enum):
     PRIMARY = auto()
     ATOM = auto()
     ERROR = auto()
+
+
+@dataclass
+class Node:
+    kind: NodeType
+    children: list[Node]
+    token: Token
+    data: Any
+
+    def pretty(
+        self, code: str, line_starts: list, indent: int = 0, current: int = 0
+    ) -> str:
+        pad = " " * current
+
+        # basic node line
+        line = f"{pad}{self.kind.name}"
+
+        # optional payloads
+        if self.data is not None:
+            line += f"{pad}data={self.data}"
+
+        if self.token is not None:
+            start_line, start_col = index_to_line_col_batch(
+                self.token.start, line_starts
+            )
+            line += f" @ {self.token.type.name} @ '{code[self.token.start : self.token.end]}' @ {start_line}:{start_col}"
+
+        lines = [line]
+
+        # recurse
+        for child in self.children:
+            lines.append(child.pretty(code, line_starts, indent, current + indent))
+
+        return "\n".join(lines)
+
+
