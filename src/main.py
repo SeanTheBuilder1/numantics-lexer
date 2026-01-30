@@ -2,6 +2,8 @@ import sys
 import json
 
 from lexer_analyzer import analyzeSource
+from lexer_token import Token, TokenType
+from syntax_analyzer import NodeType, parseFile
 from line_starts import build_line_starts, index_to_line_col_batch
 
 
@@ -32,11 +34,28 @@ def main():
                 "lexeme": code[t.start : t.end],
             }
         )
-    print(tokens)
+    # print(tokens)
     file.close()
     if len(sys.argv) >= 3:
         with open(sys.argv[2], "w") as f:
             json.dump(token_list, f, indent=2)
+
+    def filterTokens(token: Token):
+        return not (
+            token.type == TokenType.WHITESPACE
+            or token.type == TokenType.NEWLINE
+            or token.type == TokenType.COMMENT
+        )
+
+    tokens = list(filter(filterTokens, tokens))
+    result = parseFile(tokens)
+    for i in result.children:
+        if i.kind == NodeType.ERROR:
+            print(i)
+            start_line, start_col = index_to_line_col_batch(i.token.start, line_starts)
+            print(f"{start_line}:{start_col}")
+
+    print(parseFile(tokens).pretty(code, line_starts, 4))
 
 
 if __name__ == "__main__":
