@@ -169,9 +169,13 @@ prefix := | INCREMENT_OP postfix
           | DECREMENT_OP postfix
           | postfix
 
-postfix := | primary INCREMENT_OP
-           | primary DECREMENT_OP
+postfix := | postfix INCREMENT_OP
+           | postfix DECREMENT_OP
+           | postfix OPEN_PARENTHESIS_DELIMITER [arguments] CLOSED_PARENTHESIS_DELIMITER
+           | postfix OPEN_SQUARE_DELIMITER expression CLOSED_SQUARE_DELIMITER
            | primary
+
+arguments := expression (COMMA_DELIMITER expression)*
 
 primary := | atom
            | OPEN_PARENTHESIS_DELIMITER expression CLOSED_PARENTHESIS_DELIMITER

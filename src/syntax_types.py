@@ -88,6 +88,7 @@ class NodeType(Enum):
     POWER = auto()
     PREFIX = auto()
     POSTFIX = auto()
+    ARGUMENTS = auto()
     PRIMARY = auto()
     ATOM = auto()
     ERROR = auto()
