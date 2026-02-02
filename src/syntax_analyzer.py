@@ -49,6 +49,7 @@ def parseFile(tokens: list[Token]) -> Node:
     def parseCompoundType() -> Result[Node, Node]:
         node = Node(NodeType.COMPOUND_TYPE, children=[], token=checkToken(), data=None)
         if checkToken().type in [
+            TokenType.VOID_TYPE,
             TokenType.INT_TYPE,
             TokenType.FLOAT_TYPE,
             TokenType.BOOL_TYPE,
@@ -186,6 +187,7 @@ def parseFile(tokens: list[Token]) -> Node:
             return parseCompoundType()
 
         if checkToken().type in [
+            TokenType.VOID_TYPE,
             TokenType.INT_TYPE,
             TokenType.FLOAT_TYPE,
             TokenType.BOOL_TYPE,
@@ -613,6 +615,7 @@ def parseFile(tokens: list[Token]) -> Node:
             if error:
                 return Error(error)
         elif checkToken().type in [
+            TokenType.VOID_TYPE,
             TokenType.INT_TYPE,
             TokenType.FLOAT_TYPE,
             TokenType.BOOL_TYPE,
@@ -1551,6 +1554,7 @@ def parseFile(tokens: list[Token]) -> Node:
                 return result
             node.children.append(result.ok_value())
         elif token_type in [
+            TokenType.VOID_TYPE,
             TokenType.INT_TYPE,
             TokenType.FLOAT_TYPE,
             TokenType.BOOL_TYPE,

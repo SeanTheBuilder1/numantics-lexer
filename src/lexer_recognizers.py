@@ -539,6 +539,39 @@ def markdownOpRecognizer(state: LexerTokenTypeState, character: str):
     return state
 
 
+def voidTypeRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "v":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "o":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q2":
+        if character == "i":
+            state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q3":
+        if character == "d":
+            state.current_state = "q4"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
 def intTypeRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "i":

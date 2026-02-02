@@ -71,7 +71,8 @@ type := | builtin_type
 
 compound_type := builtin_type OPEN_ANGLE_DELIMITER modifier_type (COMMA_DELIMITER modifier_type)* CLOSED_ANGLE_DELIMITER
 
-builtin_type := | INT_TYPE
+builtin_type := | VOID_TYPE
+                | INT_TYPE
                 | FLOAT_TYPE
                 | BOOL_TYPE
                 | CHAR_TYPE

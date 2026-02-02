@@ -64,6 +64,7 @@ recognizer_list[TokenType.MODULO_ASSIGNMENT_OP.value] = (
 recognizer_list[TokenType.PERCENT_SCALE_OP.value] = recognizers.percentScaleOpRecognizer
 recognizer_list[TokenType.MARKUP_OP.value] = recognizers.markupOpRecognizer
 recognizer_list[TokenType.MARKDOWN_OP.value] = recognizers.markdownOpRecognizer
+recognizer_list[TokenType.VOID_TYPE.value] = recognizers.voidTypeRecognizer
 recognizer_list[TokenType.INT_TYPE.value] = recognizers.intTypeRecognizer
 recognizer_list[TokenType.FLOAT_TYPE.value] = recognizers.floatTypeRecognizer
 recognizer_list[TokenType.BOOL_TYPE.value] = recognizers.boolTypeRecognizer

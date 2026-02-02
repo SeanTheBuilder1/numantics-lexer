@@ -33,6 +33,7 @@ class TokenType(Enum):
     PERCENT_SCALE_OP = auto()
     MARKUP_OP = auto()
     MARKDOWN_OP = auto()
+    VOID_TYPE = auto()
     INT_TYPE = auto()
     FLOAT_TYPE = auto()
     BOOL_TYPE = auto()
