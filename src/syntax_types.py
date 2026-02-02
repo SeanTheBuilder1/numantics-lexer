@@ -123,3 +123,15 @@ class Node:
             lines.append(child.pretty(code, line_starts, indent, current + indent))
 
         return "\n".join(lines)
+
+    def errors(self, code: str, line_starts: list) -> str:
+        line = ""
+        if self.data is not None and self.kind is NodeType.ERROR:
+            start_line, start_col = index_to_line_col_batch(
+                self.token.start, line_starts
+            )
+            line += f"{self.kind.name}: {self.data} @ {start_line}:{start_col}\n"
+        lines = [line]
+        for child in self.children:
+            lines.append(child.errors(code, line_starts))
+        return "".join(lines)

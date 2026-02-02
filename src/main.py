@@ -48,14 +48,17 @@ def main():
         )
 
     tokens = list(filter(filterTokens, tokens))
-    result = parseFile(tokens)
+    result, has_error = parseFile(tokens)
     for i in result.children:
         if i.kind == NodeType.ERROR:
             print(i)
             start_line, start_col = index_to_line_col_batch(i.token.start, line_starts)
             print(f"{start_line}:{start_col}")
-
-    print(parseFile(tokens).pretty(code, line_starts, 4))
+    if has_error:
+        print(result.pretty(code, line_starts, 4))
+        print(result.errors(code, line_starts))
+    else:
+        print(result.pretty(code, line_starts, 4))
 
 
 if __name__ == "__main__":

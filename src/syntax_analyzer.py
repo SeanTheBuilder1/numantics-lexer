@@ -3,10 +3,11 @@ from syntax_types import Node, NodeType
 from result import Ok, Error, Result
 
 
-def parseFile(tokens: list[Token]) -> Node:
+def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
     token_index = 0
     tokens_len = len(tokens)
     current_token: Token = tokens[token_index]
+    has_error = False
 
     def checkToken(offset=0) -> Token:
         nonlocal token_index, current_token
@@ -25,6 +26,8 @@ def parseFile(tokens: list[Token]) -> Node:
         return current_token
 
     def errorFactory(err_str: str) -> Node:
+        nonlocal has_error
+        has_error = True
         return Node(kind=NodeType.ERROR, children=[], token=checkToken(), data=err_str)
 
     def expect(type: TokenType, err_str: str) -> Node | None:
@@ -33,6 +36,12 @@ def parseFile(tokens: list[Token]) -> Node:
             nextToken()
             return error
         nextToken()
+        return None
+
+    def expectNonConsuming(type: TokenType, err_str: str) -> Node | None:
+        if checkToken().type != type:
+            error = errorFactory(err_str)
+            return error
         return None
 
     def expectNode(
@@ -45,6 +54,27 @@ def parseFile(tokens: list[Token]) -> Node:
         node = Node(kind=node_type, children=[], token=checkToken(), data=None)
         nextToken()
         return Ok(node)
+
+    def expectNodeNonConsuming(
+        type: TokenType, err_str: str, node_type: NodeType
+    ) -> Result[Node, Node]:
+        if checkToken().type != type:
+            error = Error(errorFactory(err_str))
+            return error
+        node = Node(kind=node_type, children=[], token=checkToken(), data=None)
+        return Ok(node)
+
+    def recoverError(token_list: list[TokenType]):
+        recoverErrorNonConsuming(token_list)
+        if current_token.type in token_list:
+            nextToken()
+
+    def recoverErrorNonConsuming(token_list: list[TokenType]):
+        while (
+            current_token.type not in token_list
+            and current_token.type != TokenType.ENDMARKER
+        ):
+            nextToken()
 
     def parseCompoundType() -> Result[Node, Node]:
         node = Node(NodeType.COMPOUND_TYPE, children=[], token=checkToken(), data=None)
@@ -1523,36 +1553,70 @@ def parseFile(tokens: list[Token]) -> Node:
         node = Node(NodeType.STATEMENT, children=[], token=checkToken(), data=None)
         token_type = checkToken().type
 
+        def recoverStatement(result: Error[Node]):
+            old_index = token_index
+            recoverError(
+                [
+                    TokenType.IF_STATEMENT,
+                    TokenType.SWITCH_STATEMENT,
+                    TokenType.SWEEP_STATEMENT,
+                    TokenType.WHILE_LOOP,
+                    TokenType.FUNC_STATEMENT,
+                    TokenType.FOR_LOOP,
+                    TokenType.VOID_TYPE,
+                    TokenType.INT_TYPE,
+                    TokenType.FLOAT_TYPE,
+                    TokenType.BOOL_TYPE,
+                    TokenType.CHAR_TYPE,
+                    TokenType.STRING_TYPE,
+                    TokenType.OPEN_CURLY_DELIMITER,
+                    TokenType.NEXT_STATEMENT,
+                    TokenType.STOP_STATEMENT,
+                    TokenType.RETURN_STATEMENT,
+                    TokenType.SEMI_COLON_DELIMITER,
+                    TokenType.CLOSED_CURLY_DELIMITER,
+                ]
+            )
+            if token_index == old_index:
+                nextToken()
+            node.children.append(result.error_value())
+
         if token_type == TokenType.IF_STATEMENT:
             result = parseIfStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.SWITCH_STATEMENT:
             result = parseSwitchStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.SWEEP_STATEMENT:
             result = parseSweepStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.WHILE_LOOP:
             result = parseWhileStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.FUNC_STATEMENT:
             result = parseFunctionStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.FOR_LOOP:
             result = parseForStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type in [
             TokenType.VOID_TYPE,
             TokenType.INT_TYPE,
@@ -1563,33 +1627,39 @@ def parseFile(tokens: list[Token]) -> Node:
         ]:
             result = parseDeclarationStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.OPEN_CURLY_DELIMITER:
             result = parseBlock()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.NEXT_STATEMENT:
             result = parseNextStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.STOP_STATEMENT:
             result = parseStopStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         elif token_type == TokenType.RETURN_STATEMENT:
             result = parseReturnStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
         else:
             result = parseExpressionStmt()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                recoverStatement(result)
+            else:
+                node.children.append(result.ok_value())
 
         return Ok(node)
 
@@ -1598,11 +1668,25 @@ def parseFile(tokens: list[Token]) -> Node:
         error = expect(TokenType.OPEN_CURLY_DELIMITER, "'{' expected in block")
         if error:
             return Error(error)
-        while checkToken().type != TokenType.CLOSED_CURLY_DELIMITER:
+        while True:
+            type = checkToken().type
+            if type == TokenType.CLOSED_CURLY_DELIMITER:
+                break
+            if type == TokenType.ENDMARKER:
+                node.children.append(errorFactory("block unterminated"))
+                return Ok(node)
+
             result = parseStatement()
             if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
+                old_index = token_index
+                recoverError(
+                    [TokenType.SEMI_COLON_DELIMITER, TokenType.CLOSED_CURLY_DELIMITER]
+                )
+                if token_index == old_index:
+                    nextToken()
+                node.children.append(result.error_value())
+            else:
+                node.children.append(result.ok_value())
 
         error = expect(TokenType.CLOSED_CURLY_DELIMITER, "'}' expected in block")
         if error:
@@ -1614,9 +1698,29 @@ def parseFile(tokens: list[Token]) -> Node:
             kind=NodeType.FUNCTION_STMT, children=[], token=checkToken(), data=None
         )
 
+        def recoverFunctionStmt(result: Error[Node]):
+            old_index = token_index
+            recoverErrorNonConsuming(
+                [
+                    TokenType.OPEN_CURLY_DELIMITER,
+                ]
+            )
+            if token_index == old_index:
+                nextToken()
+            node.children.append(result.error_value())
+
+            if checkToken().type == TokenType.OPEN_CURLY_DELIMITER:
+                new_result = parseBlock()
+                if isinstance(new_result, Error):
+                    return new_result
+                node.children.append(new_result.ok_value())
+                return Ok(node)
+
+            return Error(node)
+
         error = expect(TokenType.FUNC_STATEMENT, "'func' expected in function")
         if error:
-            return Error(error)
+            recoverFunctionStmt(Error(error))
 
         result = expectNode(
             TokenType.IDENTIFIER, "Function name expected", NodeType.IDENTIFIER
@@ -1627,29 +1731,32 @@ def parseFile(tokens: list[Token]) -> Node:
 
         error = expect(TokenType.OPEN_PARENTHESIS_DELIMITER, "'(' expected in function")
         if error:
-            return Error(error)
+            return recoverFunctionStmt(Error(error))
 
         result = parseParameterList()
         if isinstance(result, Error):
-            return result
+            return recoverFunctionStmt(result)
         node.children.append(result.ok_value())
 
         error = expect(TokenType.VERTICAL_BAR_DELIMITER, "'|' expected in function")
         if error:
-            return Error(error)
+            return recoverFunctionStmt(Error(error))
 
         result = parseType()
         if isinstance(result, Error):
-            return result
+            return recoverFunctionStmt(result)
         node.children.append(result.ok_value())
 
-        error = expect(
+        error = expectNonConsuming(
             TokenType.CLOSED_PARENTHESIS_DELIMITER, "')' expected in function"
         )
+        if error:
+            return recoverFunctionStmt(Error(error))
+        nextToken()
 
         result = parseBlock()
         if isinstance(result, Error):
-            return result
+            return recoverFunctionStmt(result)
         node.children.append(result.ok_value())
 
         return Ok(node)
@@ -1668,7 +1775,19 @@ def parseFile(tokens: list[Token]) -> Node:
             file_node.children.append(result.ok_value())
         else:
             file_node.children.append(result.error_value())
-            print("ERROR: ", result.error_value())
-            break
+            old_index = token_index
+            recoverErrorNonConsuming(
+                [
+                    TokenType.FUNC_STATEMENT,
+                    TokenType.VOID_TYPE,
+                    TokenType.INT_TYPE,
+                    TokenType.FLOAT_TYPE,
+                    TokenType.BOOL_TYPE,
+                    TokenType.CHAR_TYPE,
+                    TokenType.STRING_TYPE,
+                ]
+            )
+            if token_index == old_index:
+                nextToken()
 
-    return file_node
+    return file_node, has_error
