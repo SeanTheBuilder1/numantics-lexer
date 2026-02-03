@@ -148,7 +148,7 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
         else:
             return Error(errorFactory("expected modifier type"))
 
-        while checkToken(1).type == TokenType.COMMA_DELIMITER:
+        while checkToken().type == TokenType.COMMA_DELIMITER:
             error = expect(TokenType.COMMA_DELIMITER, "',' expected in compound type")
             if error:
                 return Error(error)
