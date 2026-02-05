@@ -1425,38 +1425,6 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
             )
         return Ok(left_node)
 
-        if checkToken(1).type in [TokenType.INCREMENT_OP, TokenType.DECREMENT_OP]:
-            node = Node(
-                kind=NodeType.POSTFIX, children=[], token=checkToken(), data=None
-            )
-            token = checkToken(1)
-            result = parsePrimary()
-            if isinstance(result, Error):
-                return result
-            node.children.append(result.ok_value())
-
-            if token.type == TokenType.INCREMENT_OP:
-                result = expectNode(
-                    TokenType.INCREMENT_OP,
-                    "'++' expected in postfix",
-                    NodeType.POST_INCREMENT_OPERATOR,
-                )
-                if isinstance(result, Error):
-                    return result
-                node.children.append(result.ok_value())
-            elif token.type == TokenType.DECREMENT_OP:
-                result = expectNode(
-                    TokenType.DECREMENT_OP,
-                    "'--' expected in postfix",
-                    NodeType.POST_DECREMENT_OPERATOR,
-                )
-                if isinstance(result, Error):
-                    return result
-                node.children.append(result.ok_value())
-            return Ok(node)
-        result = parsePrimary()
-        return result
-
     def parseArguments() -> Result[Node, Node]:
         node = Node(kind=NodeType.ARGUMENTS, children=[], token=checkToken(), data=None)
         if checkToken().type == TokenType.CLOSED_PARENTHESIS_DELIMITER:
