@@ -1300,6 +1300,7 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
             return result
         if checkToken().type != TokenType.CARET_SYMBOL:
             return result
+        node.children.append(result.ok_value())
 
         error = expect(TokenType.CARET_SYMBOL, "'^' expected in power")
         if error:
