@@ -639,6 +639,9 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
             return Error(error)
 
         if checkToken().type == TokenType.SEMI_COLON_DELIMITER:
+            node.children.append(
+                Node(kind=NodeType.EMPTY, children=[], token=checkToken(), data=None)
+            )
             error = expect(
                 TokenType.SEMI_COLON_DELIMITER, "';' expected in for statement"
             )
@@ -673,6 +676,9 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
                 return Error(error)
 
         if checkToken().type == TokenType.SEMI_COLON_DELIMITER:
+            node.children.append(
+                Node(kind=NodeType.EMPTY, children=[], token=checkToken(), data=None)
+            )
             error = expect(
                 TokenType.SEMI_COLON_DELIMITER, "';' expected in for statement"
             )
@@ -690,6 +696,9 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
                 return Error(error)
 
         if checkToken().type == TokenType.CLOSED_PARENTHESIS_DELIMITER:
+            node.children.append(
+                Node(kind=NodeType.EMPTY, children=[], token=checkToken(), data=None)
+            )
             error = expect(
                 TokenType.CLOSED_PARENTHESIS_DELIMITER, "')' expected in for statement"
             )

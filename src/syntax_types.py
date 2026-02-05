@@ -91,6 +91,7 @@ class NodeType(Enum):
     ARGUMENTS = auto()
     PRIMARY = auto()
     ATOM = auto()
+    EMPTY = auto()
     ERROR = auto()
 
 
