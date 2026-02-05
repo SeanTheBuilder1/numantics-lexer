@@ -1279,7 +1279,7 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
             elif token.type == TokenType.MINUS_SYMBOL:
                 result = expectNode(
                     TokenType.MINUS_SYMBOL,
-                    "'+' expected in factor",
+                    "'-' expected in factor",
                     NodeType.NEGATIVE_OPERATOR,
                 )
                 if isinstance(result, Error):
