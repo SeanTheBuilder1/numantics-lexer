@@ -246,6 +246,12 @@ def resolveFile(tree: ASTNode, code: str):
         return Type(builtin=BuiltInTypes.INT_TYPE)
 
     def resolveType(type: Type, scope: Scope) -> Type | None:
+        if (
+            type.builtin not in [BuiltInTypes.INT_TYPE, BuiltInTypes.FLOAT_TYPE]
+            and len(type.modifiers) > 0
+        ):
+            nonFatalError(f"ERROR: type {type} cannot have modifier types")
+            return
         filtered_modifiers = set()
         has_percent = False
         percent_types = [ModifierTypes.PERCENT_TYPE, ModifierTypes.XPERCENT_TYPE]
