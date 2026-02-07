@@ -336,6 +336,26 @@ def resolveFile(tree: ASTNode, code: str):
                     nonFatalError("ERROR: Auto modifier cannot be with other modifiers")
 
             filtered_modifiers.add(modifier)
+        modifier_classes = getModifierClass(type.modifiers)
+
+        def filterExclusive(modifier_class: ModifierClass):
+            return modifier_class in [
+                ModifierClass.PERCENT,
+                ModifierClass.TIME,
+                ModifierClass.DISTANCE,
+                ModifierClass.AREA,
+                ModifierClass.VOLUME,
+                ModifierClass.MASS,
+                ModifierClass.TEMP,
+                ModifierClass.FORCE,
+                ModifierClass.VELOCITY,
+                ModifierClass.ACCELERATION,
+            ]
+
+        modifier_classes = list(filter(filterExclusive, modifier_classes))
+        if len(modifier_classes) > 1:
+            names = ", ".join(m.name for m in modifier_classes)
+            nonFatalError(f"ERROR: Modifier types {names} are exclusive")
 
     def isTypeMatched(type1: Type, type2: Type) -> bool:
         if type1.builtin != type2.builtin:
