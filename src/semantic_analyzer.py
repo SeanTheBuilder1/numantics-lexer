@@ -198,6 +198,15 @@ def resolveFile(tree: ASTNode, code: str):
             ModifierTypes.FT_TYPE,
             ModifierTypes.INCH_TYPE,
         ]
+        has_area = False
+        area_types = [
+            ModifierTypes.METER2_TYPE,
+            ModifierTypes.MM2_TYPE,
+            ModifierTypes.CM2_TYPE,
+            ModifierTypes.KM2_TYPE,
+            ModifierTypes.FT2_TYPE,
+            ModifierTypes.INCH2_TYPE,
+        ]
         has_volume = False
         volume_types = [
             ModifierTypes.LITER_TYPE,
@@ -267,6 +276,12 @@ def resolveFile(tree: ASTNode, code: str):
                         "ERROR: Multiple modifier in same type category (distance)"
                     )
                 has_distance = True
+            elif modifier in area_types:
+                if has_area:
+                    nonFatalError(
+                        "ERROR: Multiple modifier in same type category (area)"
+                    )
+                has_area = True
             elif modifier in volume_types:
                 if has_volume:
                     nonFatalError(
@@ -311,6 +326,7 @@ def resolveFile(tree: ASTNode, code: str):
                     or has_parity
                     or has_time
                     or has_distance
+                    or has_area
                     or has_volume
                     or has_mass
                     or has_temp

@@ -2615,6 +2615,197 @@ def inchTypeRecognizer(state: LexerTokenTypeState, character: str):
     return state
 
 
+def meter2TypeRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "m":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "e":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q2":
+        if character == "t":
+            state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q3":
+        if character == "e":
+            state.current_state = "q4"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q4":
+        if character == "r":
+            state.current_state = "q5"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q5":
+        if character == "2":
+            state.current_state = "q6"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def mm2TypeRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "m":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "m":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q2":
+        if character == "2":
+            state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def cm2TypeRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "c":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "m":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q2":
+        if character == "2":
+            state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def km2TypeRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "k":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "m":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q2":
+        if character == "2":
+            state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def ft2TypeRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "f":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "t":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q2":
+        if character == "2":
+            state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
+def inch2TypeRecognizer(state: LexerTokenTypeState, character: str):
+    if state.current_state == "q0":
+        if character == "i":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q1":
+        if character == "n":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q2":
+        if character == "c":
+            state.current_state = "q3"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q3":
+        if character == "h":
+            state.current_state = "q4"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q4":
+        if character == "2":
+            state.current_state = "q5"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    state.acceptance = LexerTokenTypeAcceptState.REJECTED
+    return state
+
+
 def literTypeRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
         if character == "l":

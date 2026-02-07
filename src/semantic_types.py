@@ -35,6 +35,12 @@ class ModifierTypes(Enum):
     KM_TYPE = auto()  # DISTANCE
     FT_TYPE = auto()  # DISTANCE
     INCH_TYPE = auto()  # DISTANCE
+    METER2_TYPE = auto()  # AREA
+    MM2_TYPE = auto()  # AREA
+    CM2_TYPE = auto()  # AREA
+    KM2_TYPE = auto()  # AREA
+    FT2_TYPE = auto()  # AREA
+    INCH2_TYPE = auto()  # AREA
     LITER_TYPE = auto()  # VOLUME
     ML_TYPE = auto()  # VOLUME
     CL_TYPE = auto()  # VOLUME
@@ -145,6 +151,18 @@ def mapTokenToModifierType(token: Token) -> ModifierTypes | None:
         return ModifierTypes.FT_TYPE
     if token.type == TokenType.INCH_TYPE:
         return ModifierTypes.INCH_TYPE
+    if token.type == TokenType.METER2_TYPE:
+        return ModifierTypes.METER2_TYPE
+    if token.type == TokenType.MM2_TYPE:
+        return ModifierTypes.MM2_TYPE
+    if token.type == TokenType.CM2_TYPE:
+        return ModifierTypes.CM2_TYPE
+    if token.type == TokenType.KM2_TYPE:
+        return ModifierTypes.KM2_TYPE
+    if token.type == TokenType.FT2_TYPE:
+        return ModifierTypes.FT2_TYPE
+    if token.type == TokenType.INCH2_TYPE:
+        return ModifierTypes.INCH2_TYPE
     if token.type == TokenType.LITER_TYPE:
         return ModifierTypes.LITER_TYPE
     if token.type == TokenType.ML_TYPE:
