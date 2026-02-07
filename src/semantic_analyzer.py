@@ -170,7 +170,7 @@ def resolveFile(tree: ASTNode, code: str):
         return Type(builtin=BuiltInTypes.INT_TYPE)
 
     def resolveType(type: Type, scope: Scope) -> Type | None:
-        filtered_modifiers = []
+        filtered_modifiers = set()
         has_percent = False
         percent_types = [ModifierTypes.PERCENT_TYPE, ModifierTypes.XPERCENT_TYPE]
         has_sign = False
@@ -237,20 +237,17 @@ def resolveFile(tree: ASTNode, code: str):
         for modifier in type.modifiers:
             if modifier in filtered_modifiers:
                 nonFatalError("ERROR: Duplicate modifier in compound type")
-                continue
             if modifier in percent_types:
                 if has_percent:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (percent)"
                     )
-                    continue
                 has_percent = True
             elif modifier in sign_types:
                 if has_sign:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (sign)"
                     )
-                    continue
                 has_sign = True
             elif modifier in nonzero_types:
                 has_nonzero = True
@@ -259,63 +256,54 @@ def resolveFile(tree: ASTNode, code: str):
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (parity)"
                     )
-                    continue
                 has_parity = True
             elif modifier in time_types:
                 if has_time:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (time)"
                     )
-                    continue
                 has_time = True
             elif modifier in distance_types:
                 if has_distance:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (distance)"
                     )
-                    continue
                 has_distance = True
             elif modifier in volume_types:
                 if has_volume:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (volume)"
                     )
-                    continue
                 has_volume = True
             elif modifier in mass_types:
                 if has_mass:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (mass)"
                     )
-                    continue
                 has_mass = True
             elif modifier in temp_types:
                 if has_temp:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (temperature)"
                     )
-                    continue
                 has_temp = True
             elif modifier in force_types:
                 if has_force:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (force)"
                     )
-                    continue
                 has_force = True
             elif modifier in velocity_types:
                 if has_velocity:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (velocity)"
                     )
-                    continue
                 has_velocity = True
             elif modifier in accel_types:
                 if has_accel:
                     nonFatalError(
                         "ERROR: Multiple modifier in same type category (acceleration)"
                     )
-                    continue
                 has_accel = True
             elif modifier in auto_type:
                 if (
@@ -333,9 +321,8 @@ def resolveFile(tree: ASTNode, code: str):
                     or has_accel
                 ):
                     nonFatalError("ERROR: Auto modifier cannot be with other modifiers")
-                    continue
 
-            filtered_modifiers.append(modifier)
+            filtered_modifiers.add(modifier)
 
     def isTypeMatched(type1: Type, type2: Type) -> bool:
         if type1.builtin != type2.builtin:
