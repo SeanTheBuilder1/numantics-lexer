@@ -18,7 +18,7 @@ def resolveFile(tree: ASTNode, code: str):
 
     def nonFatalError(*args):
         nonlocal has_error
-        print(args)
+        print(*args)
         has_error = True
 
     def define(scope: Scope, name: str, symbol: Symbol):
