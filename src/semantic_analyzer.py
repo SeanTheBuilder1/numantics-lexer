@@ -27,7 +27,7 @@ class StatementInterrupt:
     node: ASTNode
 
 
-def resolveFile(tree: ASTNode, code: str):
+def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
     scope = Scope()
     statement_stack: list[StatementInterrupt] = []
     has_error = False
@@ -610,3 +610,4 @@ def resolveFile(tree: ASTNode, code: str):
         elif node.kind == ASTNodeType.DECLARATION:
             resolveDeclaration(node, scope)
     print(scope)
+    return scope, has_error

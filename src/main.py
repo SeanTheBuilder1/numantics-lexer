@@ -1,9 +1,12 @@
 import sys
 import json
 
+from ast_converter import convertCstToAst
 from lexer_analyzer import analyzeSource
 from lexer_token import Token, TokenType
 from syntax_analyzer import NodeType, parseFile
+from semantic_analyzer import resolveFile
+from syntax_analyzer import parseFile
 from line_starts import build_line_starts, index_to_line_col_batch
 
 
@@ -59,6 +62,8 @@ def main():
         print(result.errors(code, line_starts))
     else:
         print(result.pretty(code, line_starts, 4))
+        ast = convertCstToAst(result)
+        symbols, has_semantic_error = resolveFile(ast, code)
 
 
 if __name__ == "__main__":
