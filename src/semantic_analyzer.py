@@ -23,9 +23,7 @@ def resolveFile(tree: ASTNode, code: str):
 
     def define(scope: Scope, name: str, symbol: Symbol):
         if scope.symbols.get(name):
-            nonFatalError(
-                f"ERROR: redefinition of symbol {name}", scope.symbols.get(name)
-            )
+            nonFatalError(f"ERROR: redefinition of symbol '{name}'")
             return
         scope.symbols[name] = symbol
 
