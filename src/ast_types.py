@@ -150,17 +150,18 @@ class BlockData:
 
 @dataclass
 class NextStmtData:
-    pass
+    target: ASTNode | None = None
 
 
 @dataclass
 class StopStmtData:
-    pass
+    target: ASTNode | None = None
 
 
 @dataclass
 class ReturnStmtData:
     expression: ASTNode | None
+    target: ASTNode | None = None
 
 
 @dataclass

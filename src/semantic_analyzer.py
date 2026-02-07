@@ -9,12 +9,27 @@ from semantic_types import (
     Symbol,
     Type,
 )
-from ast_types import ASTNode, ASTNodeType
+from ast_types import ASTLiteral, ASTNode, ASTNodeType, ASTOperator
 from collections import Counter
+from enum import Enum, auto
+from dataclasses import dataclass
+
+
+class StatementInterruptType(Enum):
+    LOOP = 1
+    SWITCH = auto()
+    FUNCTION = auto()
+
+
+@dataclass
+class StatementInterrupt:
+    kind: StatementInterruptType
+    node: ASTNode
 
 
 def resolveFile(tree: ASTNode, code: str):
     scope = Scope()
+    statement_stack: list[StatementInterrupt] = []
     has_error = False
 
     def nonFatalError(*args):
@@ -82,38 +97,56 @@ def resolveFile(tree: ASTNode, code: str):
             resolveBlock(tree.data.else_stmt, scope)
 
     def resolveSwitchStmt(tree: ASTNode, scope: Scope):
-        resolveBlock(tree.data.block, scope)
-        for expr, node in tree.data.case_stmts:
-            resolveExpression(expr, scope)
-            resolveStatement(node, scope)
+        expr = resolveExpression(tree.data.expr, scope)
+        statement_stack.append(
+            StatementInterrupt(kind=StatementInterruptType.SWITCH, node=tree)
+        )
+        for case_expr, case_node in tree.data.case_stmts:
+            resolveExpression(case_expr, scope)
+            resolveStatement(case_node, scope)
         if tree.data.default_stmt:
             resolveStatement(tree.data.default_stmt, scope)
+        statement_stack.pop()
 
     def resolveSweepStmt(tree: ASTNode, scope: Scope):
-        resolveBlock(tree.data.block, scope)
+        expr = resolveExpression(tree.data.expr, scope)
+        statement_stack.append(
+            StatementInterrupt(kind=StatementInterruptType.SWITCH, node=tree)
+        )
         for expr, node in tree.data.case_stmts:
             resolveExpression(expr, scope)
             resolveStatement(node, scope)
         if tree.data.default_stmt:
             resolveStatement(tree.data.default_stmt, scope)
+        statement_stack.pop()
 
     def resolveWhileStmt(tree: ASTNode, scope: Scope):
         resolveExpression(tree.data.left_expr, scope)
         if tree.data.right_expr:
             resolveExpression(tree.data.right_expr, scope)
+        statement_stack.append(
+            StatementInterrupt(kind=StatementInterruptType.LOOP, node=tree)
+        )
         resolveBlock(tree.data.block, scope)
+        statement_stack.pop()
 
     def resolveForStmt(tree: ASTNode, scope: Scope):
+        tree.scope = Scope(parent_scope=scope)
+        scope.children.append(tree.scope)
         if tree.data.init:
             if tree.data.init.kind == ASTNodeType.DECLARATION:
-                resolveDeclaration(tree.data.init, scope)
+                resolveDeclaration(tree.data.init, tree.scope)
             else:
-                resolveExpression(tree.data.init, scope)
+                resolveExpression(tree.data.init, tree.scope)
         if tree.data.condition:
-            resolveExpression(tree.data.condition, scope)
+            resolveExpression(tree.data.condition, tree.scope)
         if tree.data.update:
-            resolveExpression(tree.data.update, scope)
-        resolveBlock(tree.data.block, scope)
+            resolveExpression(tree.data.update, tree.scope)
+        statement_stack.append(
+            StatementInterrupt(kind=StatementInterruptType.LOOP, node=tree)
+        )
+        resolveBlock(tree.data.block, tree.scope)
+        statement_stack.pop()
 
     def resolveBlock(tree: ASTNode, scope: Scope):
         tree.scope = Scope(parent_scope=scope)
@@ -122,13 +155,55 @@ def resolveFile(tree: ASTNode, code: str):
             resolveStatement(node, scope)
 
     def resolveNextStmt(tree: ASTNode, scope):
-        pass
+        expr = resolveExpression(tree.data.expression, scope)
+        for stmt in reversed(statement_stack):
+            if stmt.kind == StatementInterruptType.LOOP:
+                tree.data.target = stmt.node
+                return
+            elif stmt.kind == StatementInterruptType.FUNCTION:
+                break
+        nonFatalError("ERROR: next used outside loop")
 
     def resolveStopStmt(tree: ASTNode, scope):
-        pass
+        expr = resolveExpression(tree.data.expression, scope)
+        for stmt in reversed(statement_stack):
+            if stmt.kind in [
+                StatementInterruptType.LOOP,
+                StatementInterruptType.SWITCH,
+            ]:
+                tree.data.target = stmt.node
+                return
+            elif stmt.kind == StatementInterruptType.FUNCTION:
+                break
+        nonFatalError("ERROR: stop used outside loop or switch")
 
     def resolveReturnStmt(tree: ASTNode, scope):
-        resolveExpression(tree.data.expression, scope)
+        expr = None
+        if tree.data.expression:
+            expr = resolveExpression(tree.data.expression, scope)
+        for stmt in reversed(statement_stack):
+            if stmt.kind == StatementInterruptType.FUNCTION:
+                tree.data.target = stmt.node
+                if (
+                    stmt.node.data.return_type.builtin == BuiltInTypes.VOID_TYPE
+                    and expr
+                ):
+                    nonFatalError(
+                        f"ERROR: Invalid return type {expr} for function with no return type"
+                    )
+                if (
+                    not expr
+                    and stmt.node.data.return_type.builtin != BuiltInTypes.VOID_TYPE
+                ):
+                    nonFatalError(
+                        f"ERROR: Missing return value of type {stmt.node.data.return_type}"
+                    )
+                if expr and not isTypeCastable(expr, stmt.node.data.return_type):
+                    nonFatalError(
+                        f"ERROR: Invalid return type {expr} for function with return type {stmt.node.data.return_type}"
+                    )
+                return
+        nonFatalError("ERROR: Return used outside function body")
 
     def resolveFunctionStmt(tree: ASTNode, scope: Scope):
         tree.scope = Scope(parent_scope=scope)
@@ -148,6 +223,10 @@ def resolveFile(tree: ASTNode, code: str):
         )
         define(scope, func_name, symbol)
         resolveBlock(tree.data.block, tree.scope)
+        statement_stack.append(
+            StatementInterrupt(kind=StatementInterruptType.FUNCTION, node=tree)
+        )
+        statement_stack.pop()
 
     def resolveDeclaration(tree: ASTNode, scope: Scope):
         resolveType(tree.data.type, scope)
