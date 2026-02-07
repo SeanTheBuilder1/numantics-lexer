@@ -2,6 +2,7 @@ from __future__ import annotations
 from semantic_types import (
     BuiltInTypes,
     Function,
+    ModifierClass,
     ModifierTypes,
     Parameter,
     Scope,
@@ -340,6 +341,136 @@ def resolveFile(tree: ASTNode, code: str):
         if type1.builtin != type2.builtin:
             return False
         return Counter(type1.modifiers) == Counter(type2.modifiers)
+
+    def isTypeCastable(dest: Type, src: Type) -> bool:
+        if dest.builtin == src.builtin and Counter(dest.modifiers) == Counter(
+            src.modifiers
+        ):
+            return True
+        is_builtin_castable = False
+        if (
+            dest.builtin == BuiltInTypes.FLOAT_TYPE
+            and src.builtin == BuiltInTypes.INT_TYPE
+        ):
+            is_builtin_castable = True
+        elif dest.builtin == BuiltInTypes.BOOL_TYPE and src.builtin in [
+            BuiltInTypes.INT_TYPE,
+            BuiltInTypes.FLOAT_TYPE,
+            BuiltInTypes.BOOL_TYPE,
+            BuiltInTypes.CHAR_TYPE,
+            BuiltInTypes.STRING_TYPE,
+        ]:
+            is_builtin_castable = True
+        elif (
+            dest.builtin == BuiltInTypes.INT_TYPE
+            and src.builtin == BuiltInTypes.CHAR_TYPE
+        ):
+            is_builtin_castable = True
+        else:
+            return False
+        dest_class = getModifierClass(dest.modifiers)
+        src_class = getModifierClass(src.modifiers)
+        if dest_class != src_class:
+            return False
+        if ModifierClass.AUTO in dest_class:
+            nonFatalError("ERROR: Not bounded auto type is not type castable")
+            return False
+        if ModifierClass.AUTO in src_class:
+            nonFatalError("ERROR: Not bounded auto type is not type castable")
+            return False
+        return True
+
+    def getModifierClass(modifiers: list[ModifierTypes]) -> set[ModifierClass]:
+        percent_types = [ModifierTypes.PERCENT_TYPE, ModifierTypes.XPERCENT_TYPE]
+        sign_types = [ModifierTypes.POSITIVE_TYPE, ModifierTypes.NEGATIVE_TYPE]
+        nonzero_types = [ModifierTypes.NONZERO_TYPE]
+        parity_types = [ModifierTypes.EVEN_TYPE, ModifierTypes.ODD_TYPE]
+        auto_type = [ModifierTypes.AUTO_TYPE]
+        time_types = [
+            ModifierTypes.SECOND_TYPE,
+            ModifierTypes.MINUTE_TYPE,
+            ModifierTypes.HOUR_TYPE,
+            ModifierTypes.DAY_TYPE,
+            ModifierTypes.WEEK_TYPE,
+            ModifierTypes.MONTH_TYPE,
+            ModifierTypes.YEAR_TYPE,
+        ]
+        distance_types = [
+            ModifierTypes.METER_TYPE,
+            ModifierTypes.MM_TYPE,
+            ModifierTypes.CM_TYPE,
+            ModifierTypes.KM_TYPE,
+            ModifierTypes.FT_TYPE,
+            ModifierTypes.INCH_TYPE,
+        ]
+        area_types = [
+            ModifierTypes.METER2_TYPE,
+            ModifierTypes.MM2_TYPE,
+            ModifierTypes.CM2_TYPE,
+            ModifierTypes.KM2_TYPE,
+            ModifierTypes.FT2_TYPE,
+            ModifierTypes.INCH2_TYPE,
+        ]
+        volume_types = [
+            ModifierTypes.LITER_TYPE,
+            ModifierTypes.ML_TYPE,
+            ModifierTypes.CL_TYPE,
+            ModifierTypes.KL_TYPE,
+        ]
+        mass_types = [
+            ModifierTypes.GRAM_TYPE,
+            ModifierTypes.MG_TYPE,
+            ModifierTypes.CG_TYPE,
+            ModifierTypes.KG_TYPE,
+        ]
+        temp_types = [
+            ModifierTypes.CELC_TYPE,
+            ModifierTypes.FAHR_TYPE,
+            ModifierTypes.KELV_TYPE,
+        ]
+        force_types = [
+            ModifierTypes.NEWT_TYPE,
+            ModifierTypes.KGF_TYPE,
+            ModifierTypes.LBF_TYPE,
+        ]
+        velocity_types = [
+            ModifierTypes.MPS_TYPE,
+            ModifierTypes.FPS_TYPE,
+        ]
+        accel_types = [ModifierTypes.MPS2_TYPE]
+
+        modifier_classes = set()
+
+        for modifier in modifiers:
+            if modifier in percent_types:
+                modifier_classes.add(ModifierClass.PERCENT)
+            elif modifier in sign_types:
+                modifier_classes.add(ModifierClass.SIGN)
+            elif modifier in nonzero_types:
+                modifier_classes.add(ModifierClass.NONZERO)
+            elif modifier in parity_types:
+                modifier_classes.add(ModifierClass.PARITY)
+            elif modifier in time_types:
+                modifier_classes.add(ModifierClass.TIME)
+            elif modifier in distance_types:
+                modifier_classes.add(ModifierClass.DISTANCE)
+            elif modifier in area_types:
+                modifier_classes.add(ModifierClass.AREA)
+            elif modifier in volume_types:
+                modifier_classes.add(ModifierClass.VOLUME)
+            elif modifier in mass_types:
+                modifier_classes.add(ModifierClass.MASS)
+            elif modifier in temp_types:
+                modifier_classes.add(ModifierClass.TEMP)
+            elif modifier in force_types:
+                modifier_classes.add(ModifierClass.FORCE)
+            elif modifier in velocity_types:
+                modifier_classes.add(ModifierClass.VELOCITY)
+            elif modifier in accel_types:
+                modifier_classes.add(ModifierClass.ACCELERATION)
+            elif modifier in auto_type:
+                return {ModifierClass.AUTO}
+        return modifier_classes
 
     def isTypeCompatible(dest: Type, src: Type) -> bool:
         if len(src.modifiers) == 0 and len(dest.modifiers) == 0:

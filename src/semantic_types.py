@@ -13,6 +13,23 @@ class BuiltInTypes(Enum):
     STRING_TYPE = auto()
 
 
+class ModifierClass(Enum):
+    PERCENT = 1
+    SIGN = auto()
+    NONZERO = auto()
+    PARITY = auto()
+    AUTO = auto()
+    TIME = auto()
+    DISTANCE = auto()
+    AREA = auto()
+    VOLUME = auto()
+    MASS = auto()
+    TEMP = auto()
+    FORCE = auto()
+    VELOCITY = auto()
+    ACCELERATION = auto()
+
+
 class ModifierTypes(Enum):
     PERCENT_TYPE = 1  # PERCENT
     XPERCENT_TYPE = auto()  # PERCENT
