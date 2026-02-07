@@ -1664,7 +1664,10 @@ def switchStatementRecognizer(state: LexerTokenTypeState, character: str):
 
 def intLiteralRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
-        if character == "0":
+        if character == "-":
+            state.current_state = "q1"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        elif character == "0":
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         elif character.isdigit() and character != "0":
             state.current_state = "q2"
@@ -1673,7 +1676,13 @@ def intLiteralRecognizer(state: LexerTokenTypeState, character: str):
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q1":
-        state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        if character == "0":
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        elif character.isdigit() and character != "0":
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q2":
         if character.isdigit():
@@ -1687,33 +1696,46 @@ def intLiteralRecognizer(state: LexerTokenTypeState, character: str):
 
 def floatLiteralRecognizer(state: LexerTokenTypeState, character: str):
     if state.current_state == "q0":
-        if character.isdigit():
+        if character == "-":
             state.current_state = "q1"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
-        elif character == ".":
+        elif character.isdigit():
             state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        elif character == ".":
+            state.current_state = "q3"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q1":
         if character.isdigit():
-            state.current_state = "q1"
+            state.current_state = "q2"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         elif character == ".":
-            state.current_state = "q2"
+            state.current_state = "q3"
             state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q2":
         if character.isdigit():
+            state.current_state = "q2"
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
+        elif character == ".":
             state.current_state = "q3"
-            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+            state.acceptance = LexerTokenTypeAcceptState.IN_PROGRESS
         else:
             state.acceptance = LexerTokenTypeAcceptState.REJECTED
         return state
     if state.current_state == "q3":
+        if character.isdigit():
+            state.current_state = "q4"
+            state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
+        else:
+            state.acceptance = LexerTokenTypeAcceptState.REJECTED
+        return state
+    if state.current_state == "q4":
         if character.isdigit():
             state.acceptance = LexerTokenTypeAcceptState.ACCEPTED
         else:
