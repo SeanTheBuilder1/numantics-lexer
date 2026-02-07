@@ -152,6 +152,10 @@ def resolveFile(tree: ASTNode, code: str):
         tree.scope = Scope(parent_scope=scope)
         scope.children.append(tree.scope)
         for node in tree.data.statements:
+            resolveStatement(node, tree.scope)
+
+    def resolveFunctionBlock(tree: ASTNode, scope: Scope):
+        for node in tree.data.statements:
             resolveStatement(node, scope)
 
     def resolveNextStmt(tree: ASTNode, scope):
@@ -222,10 +226,10 @@ def resolveFile(tree: ASTNode, code: str):
             scope=scope,
         )
         define(scope, func_name, symbol)
-        resolveBlock(tree.data.block, tree.scope)
         statement_stack.append(
             StatementInterrupt(kind=StatementInterruptType.FUNCTION, node=tree)
         )
+        resolveFunctionBlock(tree.data.block, tree.scope)
         statement_stack.pop()
 
     def resolveDeclaration(tree: ASTNode, scope: Scope):
