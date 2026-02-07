@@ -31,17 +31,15 @@ def resolveFile(tree: ASTNode, code: str):
 
     def reference(scope: Scope, name: str, error_on_empty=False) -> Symbol | None:
         top_scope = scope
-        while top_scope.parent_scope:
-            result = scope.symbols.get(name)
+        while top_scope:
+            result = top_scope.symbols.get(name)
             if result:
                 return result
             top_scope = top_scope.parent_scope
-        result = scope.symbols.get(name)
         if error_on_empty:
-            if not result:
-                nonFatalError("ERROR: undefined symbol '{name}'")
+            nonFatalError(f"ERROR: undefined symbol '{name}'")
 
-        return result
+        return None
 
     def resolveStatement(tree: ASTNode, scope: Scope):
         if tree.kind == ASTNodeType.DECLARATION:
