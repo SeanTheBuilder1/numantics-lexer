@@ -89,6 +89,20 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         ModifierTypes.FPS_TYPE,
     ]
     accel_types = [ModifierTypes.MPS2_TYPE]
+
+    exclusive_class = [
+        ModifierClass.PERCENT,
+        ModifierClass.TIME,
+        ModifierClass.DISTANCE,
+        ModifierClass.AREA,
+        ModifierClass.VOLUME,
+        ModifierClass.MASS,
+        ModifierClass.TEMP,
+        ModifierClass.FORCE,
+        ModifierClass.VELOCITY,
+        ModifierClass.ACCELERATION,
+    ]
+
     def nonFatalError(*args):
         nonlocal has_error
         print(*args)
@@ -489,6 +503,12 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return False
         return True
 
+    def getExclusiveClass(
+        modifier_classes: set[ModifierClass],
+    ) -> ModifierClass | None:
+        for modifier_class in modifier_classes:
+            if modifier_class in exclusive_class:
+                return modifier_class
 
     def getModifierClass(modifiers: list[ModifierTypes]) -> set[ModifierClass]:
         modifier_classes = set()
