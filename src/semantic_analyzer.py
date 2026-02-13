@@ -303,13 +303,22 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
 
     def resolveDeclaration(tree: ASTNode, scope: Scope):
         resolveType(tree.data.type, scope)
+        type = tree.data.type
+        is_auto: bool = ModifierClass.AUTO in getModifierClass(tree.data.type.modifiers)
         name = resolveIdentifier(tree.data.name, scope)
         expr = None
-        if tree.data.name:
-            expr = resolveExpression(tree.data.name, scope)
+        if tree.data.expression:
+            expr = resolveExpression(tree.data.expression, scope)
+        if not expr and is_auto:
+            nonFatalError("ERROR: Auto type declaration must have a derived type")
         if expr:
-            isTypeMatched(tree.data.type, expr)
-        symbol = Symbol(name=name, type=tree.data.type, scope=scope)
+            if is_auto:
+                type = expr
+                tree.data.type = type
+            elif not isTypeCastable(tree.data.type, expr):
+                nonFatalError(f"ERROR: Declared type {type} is not castable to {expr}")
+        symbol = Symbol(name=name, type=type, scope=scope)
+        tree.data.name.data.symbol = symbol
         define(scope, name, symbol)
 
     def resolveIdentifier(tree: ASTNode, scope: Scope):
