@@ -476,6 +476,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         if len(modifier_classes) > 1:
             names = ", ".join(m.name for m in modifier_classes)
             nonFatalError(f"ERROR: Modifier types {names} are exclusive")
+        if type.builtin == BuiltInTypes.FLOAT_TYPE and has_parity:
+            nonFatalError("ERROR: Parity type cannot be floating point")
 
     def isTypeMatched(type1: Type, type2: Type) -> bool:
         if type1.builtin != type2.builtin:
@@ -488,9 +490,16 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         ):
             return True
         is_builtin_castable = False
-        if (
+        if dest.builtin == src.builtin:
+            is_builtin_castable = True
+        elif (
             dest.builtin == BuiltInTypes.FLOAT_TYPE
             and src.builtin == BuiltInTypes.INT_TYPE
+        ):
+            is_builtin_castable = True
+        elif (
+            dest.builtin == BuiltInTypes.INT_TYPE
+            and src.builtin == BuiltInTypes.FLOAT_TYPE
         ):
             is_builtin_castable = True
         elif dest.builtin == BuiltInTypes.BOOL_TYPE and src.builtin in [
@@ -510,6 +519,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return False
         dest_class = getModifierClass(dest.modifiers)
         src_class = getModifierClass(src.modifiers)
+        if len(src_class) == 0:
+            return True
         if dest_class != src_class:
             return False
         if ModifierClass.AUTO in dest_class:
