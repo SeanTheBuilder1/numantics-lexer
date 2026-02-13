@@ -337,6 +337,57 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return symbol
         assert False
 
+    def resolveFunctionCall(tree: ASTNode, scope: Scope) -> Type:
+        name = resolveIdentifier(tree.data.function, scope)
+        symbol = reference(scope, name, True)
+        if not symbol:
+            return Type(builtin=BuiltInTypes.VOID_TYPE)
+        if not isinstance(symbol.type, Function):
+            nonFatalError(f"ERROR: '{name}' is not callable")
+            return Type(builtin=BuiltInTypes.VOID_TYPE)
+
+        arguments: list[Type] = []
+        for arg in tree.data.arguments:
+            arguments.append(resolveExpression(arg, scope))
+
+        parameters: list[Type] = []
+        for param in symbol.type.parameters:
+            parameters.append(param.type)
+
+        if len(parameters) != len(arguments):
+            nonFatalError(f"ERROR: expected {len(parameters)} argument(s)")
+            return symbol.type.return_type
+
+        for i in range(len(arguments)):
+            arg = arguments[i]
+            param = parameters[i]
+            if not isTypeCastable(param, arg):
+                nonFatalError(
+                    f"ERROR: Argument type {arg} cannot be assigned to parameter type {param}"
+                )
+        return symbol.type.return_type
+
+    def resolveArrayIndex(tree: ASTNode, scope: Scope) -> Type:
+        if tree.data.array:
+            array = resolveExpression(tree.data.array, scope)
+            return array
+        pass
+
+    def resolveLiteral(tree: ASTNode, scope: Scope) -> Type:
+        if tree.data.literal_type == ASTLiteral.TRUE_LITERAL:
+            return Type(builtin=BuiltInTypes.BOOL_TYPE)
+        elif tree.data.literal_type == ASTLiteral.FALSE_LITERAL:
+            return Type(builtin=BuiltInTypes.BOOL_TYPE)
+        elif tree.data.literal_type == ASTLiteral.INT_LITERAL:
+            return Type(builtin=BuiltInTypes.INT_TYPE)
+        elif tree.data.literal_type == ASTLiteral.FLOAT_LITERAL:
+            return Type(builtin=BuiltInTypes.FLOAT_TYPE)
+        elif tree.data.literal_type == ASTLiteral.CHAR_LITERAL:
+            return Type(builtin=BuiltInTypes.CHAR_TYPE)
+        elif tree.data.literal_type == ASTLiteral.STRING_LITERAL:
+            return Type(builtin=BuiltInTypes.STRING_TYPE)
+        return Type(builtin=BuiltInTypes.VOID_TYPE)
+
     def resolveType(type: Type, scope: Scope) -> Type | None:
         if (
             type.builtin not in [BuiltInTypes.INT_TYPE, BuiltInTypes.FLOAT_TYPE]
