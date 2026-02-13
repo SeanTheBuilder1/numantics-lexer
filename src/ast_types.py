@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any
-
 from lexer_token import Token
-from semantic_types import Scope, Type
+from semantic_types import Scope, Symbol, Type
 
 
 class ASTOperator(Enum):
@@ -78,7 +77,7 @@ class ASTNode:
 
 @dataclass
 class IdentifierData:
-    pass
+    symbol: Symbol | None = None
 
 
 @dataclass
