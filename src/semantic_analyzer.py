@@ -230,7 +230,6 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             resolveStatement(node, scope)
 
     def resolveNextStmt(tree: ASTNode, scope):
-        expr = resolveExpression(tree.data.expression, scope)
         for stmt in reversed(statement_stack):
             if stmt.kind == StatementInterruptType.LOOP:
                 tree.data.target = stmt.node
@@ -240,7 +239,6 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         nonFatalError("ERROR: next used outside loop")
 
     def resolveStopStmt(tree: ASTNode, scope):
-        expr = resolveExpression(tree.data.expression, scope)
         for stmt in reversed(statement_stack):
             if stmt.kind in [
                 StatementInterruptType.LOOP,
