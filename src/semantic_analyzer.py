@@ -32,6 +32,63 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
     statement_stack: list[StatementInterrupt] = []
     has_error = False
 
+    percent_types = [ModifierTypes.PERCENT_TYPE, ModifierTypes.XPERCENT_TYPE]
+    sign_types = [ModifierTypes.POSITIVE_TYPE, ModifierTypes.NEGATIVE_TYPE]
+    nonzero_types = [ModifierTypes.NONZERO_TYPE]
+    parity_types = [ModifierTypes.EVEN_TYPE, ModifierTypes.ODD_TYPE]
+    auto_type = [ModifierTypes.AUTO_TYPE]
+    time_types = [
+        ModifierTypes.SECOND_TYPE,
+        ModifierTypes.MINUTE_TYPE,
+        ModifierTypes.HOUR_TYPE,
+        ModifierTypes.DAY_TYPE,
+        ModifierTypes.WEEK_TYPE,
+        ModifierTypes.MONTH_TYPE,
+        ModifierTypes.YEAR_TYPE,
+    ]
+    distance_types = [
+        ModifierTypes.METER_TYPE,
+        ModifierTypes.MM_TYPE,
+        ModifierTypes.CM_TYPE,
+        ModifierTypes.KM_TYPE,
+        ModifierTypes.FT_TYPE,
+        ModifierTypes.INCH_TYPE,
+    ]
+    area_types = [
+        ModifierTypes.METER2_TYPE,
+        ModifierTypes.MM2_TYPE,
+        ModifierTypes.CM2_TYPE,
+        ModifierTypes.KM2_TYPE,
+        ModifierTypes.FT2_TYPE,
+        ModifierTypes.INCH2_TYPE,
+    ]
+    volume_types = [
+        ModifierTypes.LITER_TYPE,
+        ModifierTypes.ML_TYPE,
+        ModifierTypes.CL_TYPE,
+        ModifierTypes.KL_TYPE,
+    ]
+    mass_types = [
+        ModifierTypes.KG_TYPE,
+        ModifierTypes.GRAM_TYPE,
+        ModifierTypes.MG_TYPE,
+        ModifierTypes.CG_TYPE,
+    ]
+    temp_types = [
+        ModifierTypes.KELV_TYPE,
+        ModifierTypes.CELC_TYPE,
+        ModifierTypes.FAHR_TYPE,
+    ]
+    force_types = [
+        ModifierTypes.NEWT_TYPE,
+        ModifierTypes.KGF_TYPE,
+        ModifierTypes.LBF_TYPE,
+    ]
+    velocity_types = [
+        ModifierTypes.MPS_TYPE,
+        ModifierTypes.FPS_TYPE,
+    ]
+    accel_types = [ModifierTypes.MPS2_TYPE]
     def nonFatalError(*args):
         nonlocal has_error
         print(*args)
@@ -258,76 +315,19 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return
         filtered_modifiers = set()
         has_percent = False
-        percent_types = [ModifierTypes.PERCENT_TYPE, ModifierTypes.XPERCENT_TYPE]
         has_sign = False
-        sign_types = [ModifierTypes.POSITIVE_TYPE, ModifierTypes.NEGATIVE_TYPE]
         has_nonzero = False  # non-dependent
-        nonzero_types = [ModifierTypes.NONZERO_TYPE]
         has_parity = False
-        parity_types = [ModifierTypes.EVEN_TYPE, ModifierTypes.ODD_TYPE]
         has_auto = False
-        auto_type = [ModifierTypes.AUTO_TYPE]
         has_time = False
-        time_types = [
-            ModifierTypes.SECOND_TYPE,
-            ModifierTypes.MINUTE_TYPE,
-            ModifierTypes.HOUR_TYPE,
-            ModifierTypes.DAY_TYPE,
-            ModifierTypes.WEEK_TYPE,
-            ModifierTypes.MONTH_TYPE,
-            ModifierTypes.YEAR_TYPE,
-        ]
         has_distance = False
-        distance_types = [
-            ModifierTypes.METER_TYPE,
-            ModifierTypes.MM_TYPE,
-            ModifierTypes.CM_TYPE,
-            ModifierTypes.KM_TYPE,
-            ModifierTypes.FT_TYPE,
-            ModifierTypes.INCH_TYPE,
-        ]
         has_area = False
-        area_types = [
-            ModifierTypes.METER2_TYPE,
-            ModifierTypes.MM2_TYPE,
-            ModifierTypes.CM2_TYPE,
-            ModifierTypes.KM2_TYPE,
-            ModifierTypes.FT2_TYPE,
-            ModifierTypes.INCH2_TYPE,
-        ]
         has_volume = False
-        volume_types = [
-            ModifierTypes.LITER_TYPE,
-            ModifierTypes.ML_TYPE,
-            ModifierTypes.CL_TYPE,
-            ModifierTypes.KL_TYPE,
-        ]
         has_mass = False
-        mass_types = [
-            ModifierTypes.GRAM_TYPE,
-            ModifierTypes.MG_TYPE,
-            ModifierTypes.CG_TYPE,
-            ModifierTypes.KG_TYPE,
-        ]
         has_temp = False
-        temp_types = [
-            ModifierTypes.CELC_TYPE,
-            ModifierTypes.FAHR_TYPE,
-            ModifierTypes.KELV_TYPE,
-        ]
         has_force = False
-        force_types = [
-            ModifierTypes.NEWT_TYPE,
-            ModifierTypes.KGF_TYPE,
-            ModifierTypes.LBF_TYPE,
-        ]
         has_velocity = False
-        velocity_types = [
-            ModifierTypes.MPS_TYPE,
-            ModifierTypes.FPS_TYPE,
-        ]
         has_accel = False  # non-dependent
-        accel_types = [ModifierTypes.MPS2_TYPE]
 
         for modifier in type.modifiers:
             if modifier in filtered_modifiers:
@@ -489,65 +489,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return False
         return True
 
-    def getModifierClass(modifiers: list[ModifierTypes]) -> set[ModifierClass]:
-        percent_types = [ModifierTypes.PERCENT_TYPE, ModifierTypes.XPERCENT_TYPE]
-        sign_types = [ModifierTypes.POSITIVE_TYPE, ModifierTypes.NEGATIVE_TYPE]
-        nonzero_types = [ModifierTypes.NONZERO_TYPE]
-        parity_types = [ModifierTypes.EVEN_TYPE, ModifierTypes.ODD_TYPE]
-        auto_type = [ModifierTypes.AUTO_TYPE]
-        time_types = [
-            ModifierTypes.SECOND_TYPE,
-            ModifierTypes.MINUTE_TYPE,
-            ModifierTypes.HOUR_TYPE,
-            ModifierTypes.DAY_TYPE,
-            ModifierTypes.WEEK_TYPE,
-            ModifierTypes.MONTH_TYPE,
-            ModifierTypes.YEAR_TYPE,
-        ]
-        distance_types = [
-            ModifierTypes.METER_TYPE,
-            ModifierTypes.MM_TYPE,
-            ModifierTypes.CM_TYPE,
-            ModifierTypes.KM_TYPE,
-            ModifierTypes.FT_TYPE,
-            ModifierTypes.INCH_TYPE,
-        ]
-        area_types = [
-            ModifierTypes.METER2_TYPE,
-            ModifierTypes.MM2_TYPE,
-            ModifierTypes.CM2_TYPE,
-            ModifierTypes.KM2_TYPE,
-            ModifierTypes.FT2_TYPE,
-            ModifierTypes.INCH2_TYPE,
-        ]
-        volume_types = [
-            ModifierTypes.LITER_TYPE,
-            ModifierTypes.ML_TYPE,
-            ModifierTypes.CL_TYPE,
-            ModifierTypes.KL_TYPE,
-        ]
-        mass_types = [
-            ModifierTypes.GRAM_TYPE,
-            ModifierTypes.MG_TYPE,
-            ModifierTypes.CG_TYPE,
-            ModifierTypes.KG_TYPE,
-        ]
-        temp_types = [
-            ModifierTypes.CELC_TYPE,
-            ModifierTypes.FAHR_TYPE,
-            ModifierTypes.KELV_TYPE,
-        ]
-        force_types = [
-            ModifierTypes.NEWT_TYPE,
-            ModifierTypes.KGF_TYPE,
-            ModifierTypes.LBF_TYPE,
-        ]
-        velocity_types = [
-            ModifierTypes.MPS_TYPE,
-            ModifierTypes.FPS_TYPE,
-        ]
-        accel_types = [ModifierTypes.MPS2_TYPE]
 
+    def getModifierClass(modifiers: list[ModifierTypes]) -> set[ModifierClass]:
         modifier_classes = set()
 
         for modifier in modifiers:
