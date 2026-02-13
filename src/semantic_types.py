@@ -101,6 +101,35 @@ class Scope:
     parent_scope: Scope | None = None
     children: list[Scope] = field(default_factory=list)
 
+    def pretty(self, indent: int = 4, current: int = 0) -> str:
+        pad = " " * current
+        lines = []
+
+        lines.append(f"{pad}Scope")
+
+        def format_type(type) -> str:
+            if isinstance(type, Function):
+                params = ", ".join(
+                    f"{param.name}: {format_type(param.type)}"
+                    for param in type.parameters
+                )
+                return f"func({params} | {format_type(type.return_type)})"
+            base = type.builtin.name
+            if getattr(type, "modifiers", None):
+                modifiers = ", ".join(modifier.name for modifier in type.modifiers)
+                base += f"<{modifiers}>"
+            return base
+
+        for name, symbol in self.symbols.items():
+            sym_line = f"{pad}{' ' * indent}{name}: "
+            sym_line += format_type(symbol.type)
+            lines.append(sym_line)
+
+        for child in self.children:
+            lines.append(child.pretty(indent, current + indent))
+
+        return "\n".join(lines)
+
 
 @dataclass
 class Symbol:
