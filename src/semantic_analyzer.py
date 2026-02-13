@@ -13,6 +13,7 @@ from ast_types import ASTLiteral, ASTNode, ASTNodeType, ASTOperator, BinaryOpDat
 from collections import Counter
 from enum import Enum, auto
 from dataclasses import dataclass
+import copy
 
 
 class StatementInterruptType(Enum):
@@ -1288,6 +1289,57 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 nonFatalError(
                     f"ERROR: Invalid rhs operand {rhs_type} must be either percent or scalar"
                 )
+        return Type(builtin=BuiltInTypes.VOID_TYPE)
+
+    def resolveUnaryOp(tree: ASTNode, scope: Scope) -> Type:
+        operand = tree.data.operand
+        operand_type = resolveExpression(operand, scope)
+        operator = tree.data.operator
+        if operand_type.builtin == BuiltInTypes.VOID_TYPE:
+            nonFatalError("ERROR: void type is invalid operand for unary operation")
+            return Type(builtin=BuiltInTypes.VOID_TYPE)
+        elif operator == ASTOperator.POSITIVE_OPERATOR:
+            operand_type_copy = copy.deepcopy(operand_type)
+            if operand.builtin not in int_types:
+                nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
+                return Type(builtin=BuiltInTypes.VOID_TYPE)
+            if ModifierTypes.NEGATIVE_TYPE in operand_type_copy.modifiers:
+                operand_type_copy.modifiers.remove(ModifierTypes.NEGATIVE_TYPE)
+                operand_type_copy.modifiers.append(ModifierTypes.POSITIVE_TYPE)
+            return operand_type_copy
+        elif operator == ASTOperator.NEGATIVE_OPERATOR:
+            operand_type_copy = copy.deepcopy(operand_type)
+            if operand.builtin not in int_types:
+                nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
+                return Type(builtin=BuiltInTypes.VOID_TYPE)
+            if ModifierTypes.POSITIVE_TYPE in operand_type_copy.modifiers:
+                operand_type_copy.modifiers.remove(ModifierTypes.POSITIVE_TYPE)
+                operand_type_copy.modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+            return operand_type_copy
+        elif operator in [
+            ASTOperator.PRE_INCREMENT_OPERATOR,
+            ASTOperator.PRE_DECREMENT_OPERATOR,
+        ]:
+            if operand.kind != ASTNodeType.IDENTIFIER:
+                nonFatalError("ERROR: left side of assignment must be l-value")
+                return operand_type
+            if operand_type.builtin not in strictly_int_types:
+                nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
+                return Type(builtin=BuiltInTypes.VOID_TYPE)
+            return operand_type
+        elif operator in [
+            ASTOperator.POST_INCREMENT_OPERATOR,
+            ASTOperator.POST_DECREMENT_OPERATOR,
+        ]:
+            if operand.kind != ASTNodeType.IDENTIFIER:
+                nonFatalError("ERROR: left side of assignment must be l-value")
+                return operand_type
+            if operand.builtin not in strictly_int_types:
+                nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
+                return Type(builtin=BuiltInTypes.VOID_TYPE)
+            return operand_type
+        elif operator == ASTOperator.NOT_OPERATOR:
+            return Type(builtin=BuiltInTypes.BOOL_TYPE)
         return Type(builtin=BuiltInTypes.VOID_TYPE)
 
     def resolveFunctionCall(tree: ASTNode, scope: Scope) -> Type:
