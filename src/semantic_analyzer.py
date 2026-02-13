@@ -388,6 +388,13 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return Type(builtin=BuiltInTypes.STRING_TYPE)
         return Type(builtin=BuiltInTypes.VOID_TYPE)
 
+    def resolveSymbol(tree: ASTNode, scope: Scope) -> Type | Function:
+        name = resolveIdentifier(tree, scope)
+        symbol = reference(scope, name, True)
+        if not symbol:
+            return Type(builtin=BuiltInTypes.VOID_TYPE)
+        return symbol.type
+
     def resolveType(type: Type, scope: Scope) -> Type | None:
         if (
             type.builtin not in [BuiltInTypes.INT_TYPE, BuiltInTypes.FLOAT_TYPE]
