@@ -149,14 +149,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             resolveStopStmt(tree, scope)
         elif tree.kind == ASTNodeType.RETURN_STMT:
             resolveReturnStmt(tree, scope)
-        # elif tree.kind == ASTNodeType.FUNCTION_CALL:
-        #     resolveFunctionCall(tree, scope)
-        # elif tree.kind == ASTNodeType.ARRAY_INDEX:
-        #     resolveArrayIndex(tree, scope)
-        # elif tree.kind == ASTNodeType.BINARY_OP:
-        #     resolveBinaryOp(tree, scope)
-        # elif tree.kind == ASTNodeType.UNARY_OP:
-        #     resolveUnaryOp(tree, scope)
+        else:
+            resolveExpression(tree, scope)
 
     def resolveIfStmt(tree: ASTNode, scope: Scope):
         resolveExpression(tree.data.expr, scope)
@@ -324,8 +318,24 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
     def resolveIdentifier(tree: ASTNode, scope: Scope):
         return code[tree.token.start : tree.token.end]
 
-    def resolveExpression(tree: ASTNode, scope: Scope):
-        return Type(builtin=BuiltInTypes.INT_TYPE)
+    def resolveExpression(tree: ASTNode, scope: Scope) -> Type:
+        if tree.kind == ASTNodeType.BINARY_OP:
+            return resolveBinaryOp(tree, scope)
+        elif tree.kind == ASTNodeType.UNARY_OP:
+            return resolveUnaryOp(tree, scope)
+        elif tree.kind == ASTNodeType.FUNCTION_CALL:
+            return resolveFunctionCall(tree, scope)
+        elif tree.kind == ASTNodeType.ARRAY_INDEX:
+            return resolveArrayIndex(tree, scope)
+        elif tree.kind == ASTNodeType.LITERAL:
+            return resolveLiteral(tree, scope)
+        elif tree.kind == ASTNodeType.IDENTIFIER:
+            symbol = resolveSymbol(tree, scope)
+            if isinstance(symbol, Function):
+                nonFatalError("ERROR: Sole function cannot be used in expression")
+                return Type(builtin=BuiltInTypes.VOID_TYPE)
+            return symbol
+        assert False
 
     def resolveType(type: Type, scope: Scope) -> Type | None:
         if (
