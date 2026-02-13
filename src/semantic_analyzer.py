@@ -9,7 +9,7 @@ from semantic_types import (
     Symbol,
     Type,
 )
-from ast_types import ASTLiteral, ASTNode, ASTNodeType, ASTOperator
+from ast_types import ASTLiteral, ASTNode, ASTNodeType, ASTOperator, BinaryOpData
 from collections import Counter
 from enum import Enum, auto
 from dataclasses import dataclass
@@ -408,6 +408,887 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
             return symbol
         assert False
+
+    def resolveBinaryOp(tree: ASTNode, scope: Scope) -> Type:
+        lhs = tree.data.lhs
+        rhs = tree.data.rhs
+        lhs_type = resolveExpression(lhs, scope)
+        rhs_type = resolveExpression(rhs, scope)
+        operator = tree.data.operator
+        new_builtin: BuiltInTypes = BuiltInTypes.VOID_TYPE
+        new_modifiers: list[ModifierTypes] = []
+
+        if (
+            lhs_type.builtin == BuiltInTypes.VOID_TYPE
+            or rhs_type.builtin == BuiltInTypes.VOID_TYPE
+        ):
+            nonFatalError("ERROR: void type is invalid operand for binary operation")
+            return Type(builtin=BuiltInTypes.VOID_TYPE)
+        elif operator == ASTOperator.ADD_OPERATOR:
+            if (
+                lhs_type.builtin == BuiltInTypes.STRING_TYPE
+                or rhs_type.builtin == BuiltInTypes.STRING_TYPE
+            ):
+                if lhs_type.builtin != BuiltInTypes.STRING_TYPE:
+                    nonFatalError(
+                        f"ERROR: Invalid lhs operand {lhs_type} must be string type"
+                    )
+                elif rhs_type.builtin != BuiltInTypes.STRING_TYPE:
+                    nonFatalError(
+                        f"ERROR: Invalid rhs operand {rhs_type} must be string type"
+                    )
+                else:
+                    new_builtin = BuiltInTypes.STRING_TYPE
+            elif lhs_type.builtin in int_types or rhs_type.builtin in int_types:
+                for int_type in int_types:
+                    if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
+                        if lhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                            )
+                        elif rhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                            )
+                        else:
+                            new_builtin = int_type
+                            break
+
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            # EXCLUSIVE CLASS
+            for modifier in modifier_priority_table.keys():
+                if modifier not in lhs_class and modifier not in rhs_class:
+                    continue
+                if modifier not in lhs_class or modifier not in rhs_class:
+                    nonFatalError(
+                        f"ERROR: mismatched exclusive modifier types {lhs_type} and {rhs_type}"
+                    )
+                    break
+                for type in modifier_priority_table[modifier]:
+                    if type in lhs_type.modifiers or type in rhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+
+            # INCLUSIVE CLASS
+            if ModifierClass.SIGN in lhs_class and ModifierClass.SIGN in rhs_class:
+                if (
+                    ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif (
+                    ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NEGATIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+                else:
+                    pass
+            elif ModifierClass.SIGN in lhs_class:
+                pass
+            elif ModifierClass.SIGN in rhs_class:
+                pass
+
+            if (
+                ModifierClass.NONZERO in lhs_class
+                and ModifierClass.NONZERO in rhs_class
+            ):
+                pass
+            elif ModifierClass.NONZERO in lhs_class:
+                pass
+            elif ModifierClass.NONZERO in rhs_class:
+                pass
+
+            if ModifierClass.PARITY in lhs_class and ModifierClass.PARITY in rhs_class:
+                if (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.EVEN_TYPE)
+                else:
+                    new_modifiers.append(ModifierTypes.ODD_TYPE)
+            elif ModifierClass.PARITY in lhs_class:
+                pass
+            elif ModifierClass.PARITY in rhs_class:
+                pass
+            return Type(builtin=new_builtin, modifiers=new_modifiers)
+
+        elif operator == ASTOperator.SUB_OPERATOR:
+            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
+                for int_type in int_types:
+                    if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
+                        if lhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                            )
+                            break
+                        elif rhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                            )
+                            break
+                        else:
+                            new_builtin = int_type
+                            break
+            else:
+                nonFatalError(
+                    f"ERROR: Invalid operands {lhs_type}, {rhs_type} for binary operation"
+                )
+
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            # EXCLUSIVE CLASS
+            for modifier in modifier_priority_table.keys():
+                if modifier not in lhs_class and modifier not in rhs_class:
+                    continue
+                if modifier not in lhs_class or modifier not in rhs_class:
+                    nonFatalError(
+                        f"ERROR: mismatched exclusive modifier types {lhs_type} and {rhs_type}"
+                    )
+                    break
+                for type in modifier_priority_table[modifier]:
+                    if type in lhs_type.modifiers or type in rhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+
+            # INCLUSIVE CLASS
+            if ModifierClass.SIGN in lhs_class and ModifierClass.SIGN in rhs_class:
+                if (
+                    ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    pass
+                elif (
+                    ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NEGATIVE_TYPE in rhs_type.modifiers
+                ):
+                    pass
+                else:
+                    pass
+            elif ModifierClass.SIGN in lhs_class:
+                pass
+            elif ModifierClass.SIGN in rhs_class:
+                pass
+
+            if (
+                ModifierClass.NONZERO in lhs_class
+                and ModifierClass.NONZERO in rhs_class
+            ):
+                pass
+            elif ModifierClass.NONZERO in lhs_class:
+                pass
+            elif ModifierClass.NONZERO in rhs_class:
+                pass
+
+            if ModifierClass.PARITY in lhs_class and ModifierClass.PARITY in rhs_class:
+                if (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.EVEN_TYPE)
+                else:
+                    new_modifiers.append(ModifierTypes.ODD_TYPE)
+            elif ModifierClass.PARITY in lhs_class:
+                pass
+            elif ModifierClass.PARITY in rhs_class:
+                pass
+        elif operator == ASTOperator.MULT_OPERATOR:
+            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
+                for int_type in int_types:
+                    if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
+                        if lhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                            )
+                            break
+                        elif rhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                            )
+                            break
+                        else:
+                            new_builtin = int_type
+                            break
+            else:
+                nonFatalError(
+                    f"ERROR: Invalid operands {lhs_type}, {rhs_type} for binary operation"
+                )
+
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            lhs_exclusive = getExclusiveClass(lhs_class)
+            rhs_exclusive = getExclusiveClass(rhs_class)
+            # EXCLUSIVE CLASS
+            if not lhs_exclusive and not rhs_exclusive:
+                pass
+
+            elif (
+                lhs_exclusive == ModifierClass.VELOCITY
+                and rhs_exclusive == ModifierClass.TIME
+            ):
+                if ModifierTypes.MPS_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.METER_TYPE)
+                elif ModifierTypes.FPS_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.FT_TYPE)
+            elif (
+                lhs_exclusive == ModifierClass.TIME
+                and rhs_exclusive == ModifierClass.VELOCITY
+            ):
+                if ModifierTypes.MPS_TYPE in rhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.METER_TYPE)
+                elif ModifierTypes.FPS_TYPE in rhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.FT_TYPE)
+
+            elif (
+                lhs_exclusive == ModifierClass.ACCELERATION
+                and rhs_exclusive == ModifierClass.TIME
+            ):
+                if ModifierTypes.MPS2_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.MPS_TYPE)
+            elif (
+                lhs_exclusive == ModifierClass.TIME
+                and rhs_exclusive == ModifierClass.ACCELERATION
+            ):
+                if ModifierTypes.MPS2_TYPE in rhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.MPS_TYPE)
+
+            elif (
+                lhs_exclusive == ModifierClass.PERCENT
+                and rhs_exclusive == ModifierClass.PERCENT
+            ):
+                for type in modifier_priority_table[lhs_exclusive]:
+                    if type in lhs_type.modifiers or type in rhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+            elif not lhs_exclusive and rhs_exclusive == ModifierClass.PERCENT:
+                for type in modifier_priority_table[rhs_exclusive]:
+                    if type in rhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+            elif lhs_exclusive == ModifierClass.PERCENT and not rhs_exclusive:
+                for type in modifier_priority_table[lhs_exclusive]:
+                    if type in lhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+
+            elif (
+                lhs_exclusive == ModifierClass.DISTANCE
+                and rhs_exclusive == ModifierClass.DISTANCE
+            ):
+                for type in modifier_priority_table[lhs_exclusive]:
+                    if type in lhs_type.modifiers or type in rhs_type.modifiers:
+                        new_modifiers.append(distance_to_area[type])
+                        break
+
+            elif (
+                lhs_exclusive == ModifierClass.DISTANCE
+                and rhs_exclusive == ModifierClass.AREA
+            ):
+                for i in range(len(modifier_priority_table[lhs_exclusive])):
+                    distance_type = modifier_priority_table[lhs_exclusive][i]
+                    area_type = modifier_priority_table[rhs_exclusive][i]
+                    if distance_type in lhs_type.modifiers:
+                        new_modifiers.append(distance_or_area_to_volume[distance_type])
+                        break
+                    if area_type in rhs_type.modifiers:
+                        new_modifiers.append(distance_or_area_to_volume[area_type])
+                        break
+            elif (
+                lhs_exclusive == ModifierClass.AREA
+                and rhs_exclusive == ModifierClass.DISTANCE
+            ):
+                for i in range(len(modifier_priority_table[lhs_exclusive])):
+                    area_type = modifier_priority_table[lhs_exclusive][i]
+                    distance_type = modifier_priority_table[rhs_exclusive][i]
+                    if area_type in lhs_type.modifiers:
+                        new_modifiers.append(distance_or_area_to_volume[area_type])
+                        break
+                    if distance_type in rhs_type.modifiers:
+                        new_modifiers.append(distance_or_area_to_volume[distance_type])
+                        break
+
+            elif (
+                lhs_exclusive == ModifierClass.MASS
+                and rhs_exclusive == ModifierClass.ACCELERATION
+            ) or (
+                lhs_exclusive == ModifierClass.ACCELERATION
+                and rhs_exclusive == ModifierClass.MASS
+            ):
+                new_modifiers.append(ModifierTypes.NEWT_TYPE)
+
+            elif lhs_exclusive and not rhs_exclusive:
+                for type in modifier_priority_table[lhs_exclusive]:
+                    if type in lhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+
+            elif not lhs_exclusive and rhs_exclusive:
+                for type in modifier_priority_table[rhs_exclusive]:
+                    if type in rhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+            else:
+                nonFatalError(
+                    f"ERROR: invalid operand class for multiplication {lhs_exclusive} and {rhs_exclusive}, type {lhs_type} and {rhs_type}"
+                )
+
+            # INCLUSIVE CLASS
+            if ModifierClass.SIGN in lhs_class and ModifierClass.SIGN in rhs_class:
+                if (
+                    ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif (
+                    ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NEGATIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif (
+                    ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NEGATIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+                elif (
+                    ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+            elif ModifierClass.SIGN in lhs_class:
+                pass
+            elif ModifierClass.SIGN in rhs_class:
+                pass
+
+            if (
+                ModifierClass.NONZERO in lhs_class
+                and ModifierClass.NONZERO in rhs_class
+            ):
+                new_modifiers.append(ModifierTypes.NONZERO_TYPE)
+            elif ModifierClass.NONZERO in lhs_class:
+                pass
+            elif ModifierClass.NONZERO in rhs_class:
+                pass
+
+            if ModifierClass.PARITY in lhs_class and ModifierClass.PARITY in rhs_class:
+                if (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.EVEN_TYPE)
+                elif (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.ODD_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.EVEN_TYPE)
+                elif (
+                    ModifierTypes.ODD_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.EVEN_TYPE)
+                else:
+                    new_modifiers.append(ModifierTypes.ODD_TYPE)
+            elif ModifierClass.PARITY in lhs_class:
+                pass
+            elif ModifierClass.PARITY in rhs_class:
+                pass
+            return Type(builtin=new_builtin, modifiers=new_modifiers)
+        elif operator == ASTOperator.DIV_OPERATOR:
+            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
+                for int_type in int_types:
+                    if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
+                        if lhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                            )
+                            break
+                        elif rhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                            )
+                            break
+                        else:
+                            new_builtin = int_type
+                            break
+            else:
+                nonFatalError(
+                    f"ERROR: Invalid operands {lhs_type}, {rhs_type} for binary operation"
+                )
+
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            lhs_exclusive = getExclusiveClass(lhs_class)
+            rhs_exclusive = getExclusiveClass(rhs_class)
+
+            # EXCLUSIVE CLASS
+            if not lhs_exclusive and not rhs_exclusive:
+                pass
+
+            elif lhs_exclusive and not rhs_exclusive:
+                for type in modifier_priority_table[lhs_exclusive]:
+                    if type in lhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+
+            elif not lhs_exclusive and rhs_exclusive:
+                nonFatalError("ERROR: lhs cannot be scalar in division")
+
+            elif (
+                lhs_exclusive == ModifierClass.PERCENT
+                and rhs_exclusive == ModifierClass.PERCENT
+            ):
+                for type in modifier_priority_table[lhs_exclusive]:
+                    if type in lhs_type.modifiers or type in rhs_type.modifiers:
+                        new_modifiers.append(type)
+                        break
+
+            elif lhs_exclusive and rhs_exclusive and lhs_exclusive == rhs_exclusive:
+                pass
+
+            elif (
+                lhs_exclusive == ModifierClass.DISTANCE
+                and rhs_exclusive == ModifierClass.TIME
+            ):
+                if ModifierTypes.METER_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.MPS_TYPE)
+                elif ModifierTypes.MM_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.MPS_TYPE)
+                elif ModifierTypes.CM_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.MPS_TYPE)
+                elif ModifierTypes.KM_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.MPS_TYPE)
+                elif ModifierTypes.FT_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.FPS_TYPE)
+                elif ModifierTypes.INCH_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.FPS_TYPE)
+
+            elif (
+                lhs_exclusive == ModifierClass.VELOCITY
+                and rhs_exclusive == ModifierClass.TIME
+            ):
+                new_modifiers.append(ModifierTypes.MPS2_TYPE)
+
+            elif (
+                lhs_exclusive == ModifierClass.FORCE
+                and rhs_exclusive == ModifierClass.MASS
+            ):
+                new_modifiers.append(ModifierTypes.MPS2_TYPE)
+
+            elif (
+                lhs_exclusive == ModifierClass.FORCE
+                and rhs_exclusive == ModifierClass.ACCELERATION
+            ):
+                new_modifiers.append(ModifierTypes.KG_TYPE)
+
+            elif (
+                lhs_exclusive == ModifierClass.VOLUME
+                and rhs_exclusive == ModifierClass.AREA
+            ):
+                for type in modifier_priority_table[rhs_exclusive]:
+                    if type in rhs_type.modifiers:
+                        new_modifiers.append(area_to_distance[type])
+                        break
+
+            elif (
+                lhs_exclusive == ModifierClass.AREA
+                and rhs_exclusive == ModifierClass.DISTANCE
+            ):
+                for i in range(len(modifier_priority_table[lhs_exclusive])):
+                    area_type = modifier_priority_table[lhs_exclusive][i]
+                    distance_type = modifier_priority_table[rhs_exclusive][i]
+                    if area_type in lhs_type.modifiers:
+                        new_modifiers.append(area_to_distance[area_type])
+                        break
+                    if distance_type in rhs_type.modifiers:
+                        new_modifiers.append(distance_type)
+                        break
+
+            elif (
+                lhs_exclusive == ModifierClass.VOLUME
+                and rhs_exclusive == ModifierClass.DISTANCE
+            ):
+                for type in modifier_priority_table[rhs_exclusive]:
+                    if type in rhs_type.modifiers:
+                        new_modifiers.append(distance_to_area[type])
+                        break
+
+            else:
+                nonFatalError(
+                    f"ERROR: invalid operand class for division {lhs_exclusive} and {rhs_exclusive}, type {lhs_type} and {rhs_type}"
+                )
+
+            # INCLUSIVE CLASS
+            if ModifierClass.SIGN in lhs_class and ModifierClass.SIGN in rhs_class:
+                if (
+                    ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif (
+                    ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NEGATIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif (
+                    ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NEGATIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+                elif (
+                    ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+            elif ModifierClass.SIGN in lhs_class:
+                pass
+            elif ModifierClass.SIGN in rhs_class:
+                pass
+
+            if (
+                ModifierClass.NONZERO in lhs_class
+                and ModifierClass.NONZERO in rhs_class
+            ):
+                new_modifiers.append(ModifierTypes.NONZERO_TYPE)
+            elif ModifierClass.NONZERO in lhs_class:
+                pass
+            elif ModifierClass.NONZERO in rhs_class:
+                pass
+
+            if ModifierClass.PARITY in lhs_class and ModifierClass.PARITY in rhs_class:
+                if (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    pass
+                elif (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.ODD_TYPE in rhs_type.modifiers
+                ):
+                    pass
+                elif (
+                    ModifierTypes.ODD_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    pass
+                else:
+                    pass
+            elif ModifierClass.PARITY in lhs_class:
+                pass
+            elif ModifierClass.PARITY in rhs_class:
+                pass
+            return Type(builtin=new_builtin, modifiers=new_modifiers)
+        elif operator == ASTOperator.MOD_OPERATOR:
+            if (
+                lhs_type.builtin in strictly_int_types
+                or rhs_type.builtin in strictly_int_types
+            ):
+                for int_type in strictly_int_types:
+                    if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
+                        if lhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                            )
+                            break
+                        elif rhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                            )
+                            break
+                        else:
+                            new_builtin = int_type
+                            break
+            else:
+                nonFatalError(
+                    f"ERROR: Invalid operands {lhs_type}, {rhs_type} for binary operation"
+                )
+
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            lhs_exclusive = getExclusiveClass(lhs_class)
+            rhs_exclusive = getExclusiveClass(rhs_class)
+            # EXCLUSIVE CLASS
+            if not lhs_exclusive and not rhs_exclusive:
+                pass
+            elif lhs_exclusive and rhs_exclusive and lhs_exclusive == rhs_exclusive:
+                for type in modifier_priority_table[lhs_exclusive]:
+                    if type in lhs_type.modifiers:
+                        new_modifiers.append(type)
+            else:
+                nonFatalError(
+                    f"ERROR: invalid operand class for modulo {lhs_exclusive} and {rhs_exclusive}, type {lhs_type} and {rhs_type}"
+                )
+
+            # INCLUSIVE CLASS
+            if ModifierClass.SIGN in lhs_class and ModifierClass.SIGN in rhs_class:
+                pass
+            elif ModifierClass.SIGN in lhs_class:
+                pass
+            elif ModifierClass.SIGN in rhs_class:
+                pass
+
+            if (
+                ModifierClass.NONZERO in lhs_class
+                and ModifierClass.NONZERO in rhs_class
+            ):
+                pass
+            elif ModifierClass.NONZERO in lhs_class:
+                pass
+            elif ModifierClass.NONZERO in rhs_class:
+                pass
+
+            if ModifierClass.PARITY in lhs_class and ModifierClass.PARITY in rhs_class:
+                if (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.EVEN_TYPE)
+                elif (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.ODD_TYPE in rhs_type.modifiers
+                ):
+                    pass
+                elif (
+                    ModifierTypes.ODD_TYPE in lhs_type.modifiers
+                    and ModifierTypes.EVEN_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.ODD_TYPE)
+                else:
+                    pass
+            elif ModifierClass.PARITY in lhs_class:
+                pass
+            elif ModifierClass.PARITY in rhs_class:
+                pass
+            return Type(builtin=new_builtin, modifiers=new_modifiers)
+        elif operator == ASTOperator.EXP_OPERATOR:
+            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
+                for int_type in int_types:
+                    if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
+                        if lhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                            )
+                            break
+                        elif rhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                            )
+                            break
+                        else:
+                            new_builtin = int_type
+                            break
+            else:
+                nonFatalError(
+                    f"ERROR: Invalid operands {lhs_type}, {rhs_type} for binary operation"
+                )
+
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            lhs_exclusive = getExclusiveClass(lhs_class)
+            rhs_exclusive = getExclusiveClass(rhs_class)
+            # EXCLUSIVE CLASS
+            if not lhs_exclusive and not rhs_exclusive:
+                pass
+            else:
+                nonFatalError(
+                    f"ERROR: invalid operand class for modulo {lhs_exclusive} and {rhs_exclusive}, type {lhs_type} and {rhs_type}"
+                )
+
+            # INCLUSIVE CLASS
+            if ModifierClass.SIGN in lhs_class and ModifierClass.SIGN in rhs_class:
+                if ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif ModifierTypes.EVEN_TYPE in rhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif ModifierTypes.ODD_TYPE in rhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+                elif lhs_type.builtin not in strictly_int_types:
+                    nonFatalError(
+                        f"ERROR: negative base for non integer exponent is invalid {lhs_type} and {rhs_type}"
+                    )
+            elif ModifierClass.SIGN in lhs_class:
+                if ModifierTypes.POSITIVE_TYPE in lhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif ModifierTypes.EVEN_TYPE in rhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
+                elif ModifierTypes.ODD_TYPE in rhs_type.modifiers:
+                    new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
+                elif lhs_type.builtin not in strictly_int_types:
+                    nonFatalError(
+                        f"ERROR: negative base for non integer exponent is invalid {lhs_type} and {rhs_type}"
+                    )
+            elif ModifierClass.SIGN in rhs_class:
+                pass
+
+            if ModifierClass.NONZERO in lhs_class:
+                if (
+                    ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
+                    and rhs_type.builtin not in strictly_int_types
+                ):
+                    nonFatalError(
+                        f"ERROR: negative base for non integer exponent is invalid {lhs_type} and {rhs_type}"
+                    )
+                else:
+                    new_modifiers.append(ModifierTypes.NONZERO_TYPE)
+            elif ModifierClass.NONZERO in rhs_class:
+                pass
+
+            if ModifierClass.PARITY in lhs_class and ModifierClass.PARITY in rhs_class:
+                if (
+                    ModifierTypes.EVEN_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NONZERO_TYPE in rhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.EVEN_TYPE)
+                elif (
+                    ModifierTypes.ODD_TYPE in lhs_type.modifiers
+                    and ModifierTypes.NONZERO_TYPE in rhs_type.modifiers
+                    and ModifierTypes.POSITIVE_TYPE in rhs_type.modifiers
+                ):
+                    new_modifiers.append(ModifierTypes.ODD_TYPE)
+                else:
+                    pass
+            elif ModifierClass.PARITY in lhs_class:
+                pass
+            elif ModifierClass.PARITY in rhs_class:
+                pass
+            return Type(builtin=new_builtin, modifiers=new_modifiers)
+        elif operator in [
+            ASTOperator.NOT_EQUAL_OPERATOR,
+            ASTOperator.EQUAL_OPERATOR,
+        ]:
+            new_builtin = BuiltInTypes.BOOL_TYPE
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            for modifier in modifier_priority_table.keys():
+                if modifier not in lhs_class and modifier not in rhs_class:
+                    continue
+                if modifier not in lhs_class or modifier not in rhs_class:
+                    nonFatalError(
+                        f"ERROR: mismatched exclusive modifier types {lhs_type} and {rhs_type}"
+                    )
+                    break
+
+            return Type(builtin=new_builtin)
+        elif operator in [
+            ASTOperator.LESS_OPERATOR,
+            ASTOperator.LESS_OR_EQUAL_OPERATOR,
+            ASTOperator.GREATER_OPERATOR,
+            ASTOperator.GREATER_OR_EQUAL_OPERATOR,
+        ]:
+            new_builtin = BuiltInTypes.BOOL_TYPE
+            if (
+                lhs_type.builtin == BuiltInTypes.STRING_TYPE
+                or rhs_type.builtin == BuiltInTypes.STRING_TYPE
+            ):
+                nonFatalError(
+                    f"ERROR: string is invalid for comparison operation {lhs_type} and {rhs_type}"
+                )
+                return Type(builtin=new_builtin)
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            for modifier in modifier_priority_table.keys():
+                if modifier not in lhs_class and modifier not in rhs_class:
+                    continue
+                if modifier not in lhs_class or modifier not in rhs_class:
+                    nonFatalError(
+                        f"ERROR: mismatched exclusive modifier types {lhs_type} and {rhs_type}"
+                    )
+                    break
+
+            return Type(builtin=new_builtin)
+        elif operator == ASTOperator.AND_OPERATOR:
+            new_builtin = BuiltInTypes.BOOL_TYPE
+            return Type(builtin=new_builtin)
+        elif operator == ASTOperator.OR_OPERATOR:
+            new_builtin = BuiltInTypes.BOOL_TYPE
+            return Type(builtin=new_builtin)
+        elif operator == ASTOperator.ASSIGNMENT_OPERATOR:
+            if lhs.kind != ASTNodeType.IDENTIFIER:
+                nonFatalError("ERROR: left side of assignment must be l-value")
+                return lhs_type
+            if not isTypeCastable(lhs_type, rhs_type):
+                nonFatalError(f"ERROR: {lhs_type} is not assignable to {rhs}")
+            return lhs
+
+        elif operator in [
+            ASTOperator.PLUS_ASSIGNMENT_OPERATOR,
+            ASTOperator.MINUS_ASSIGNMENT_OPERATOR,
+            ASTOperator.MULTIPLY_ASSIGNMENT_OPERATOR,
+            ASTOperator.DIVIDE_ASSIGNMENT_OPERATOR,
+            ASTOperator.MODULO_ASSIGNMENT_OPERATOR,
+        ]:
+            compound_assignment_to_operator = {
+                ASTOperator.PLUS_ASSIGNMENT_OPERATOR: ASTOperator.ADD_OPERATOR,
+                ASTOperator.MINUS_ASSIGNMENT_OPERATOR: ASTOperator.SUB_OPERATOR,
+                ASTOperator.MULTIPLY_ASSIGNMENT_OPERATOR: ASTOperator.MULT_OPERATOR,
+                ASTOperator.DIVIDE_ASSIGNMENT_OPERATOR: ASTOperator.DIV_OPERATOR,
+                ASTOperator.MODULO_ASSIGNMENT_OPERATOR: ASTOperator.MOD_OPERATOR,
+            }
+            pseudo_binary_op_node = ASTNode(
+                kind=ASTNodeType.BINARY_OP,
+                token=tree.token,
+                data=BinaryOpData(
+                    lhs=lhs, rhs=rhs, operator=compound_assignment_to_operator[operator]
+                ),
+            )
+            pseudo_assignment_op_node = ASTNode(
+                kind=ASTNodeType.BINARY_OP,
+                token=tree.token,
+                data=BinaryOpData(
+                    lhs=lhs,
+                    rhs=pseudo_binary_op_node,
+                    operator=ASTOperator.ASSIGNMENT_OPERATOR,
+                ),
+            )
+            return resolveBinaryOp(pseudo_assignment_op_node, scope)
+        elif operator in [
+            ASTOperator.PERCENT_SCALE_OPERATOR,
+            ASTOperator.MARKUP_OPERATOR,
+            ASTOperator.MARKDOWN_OPERATOR,
+        ]:
+            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
+                for int_type in int_types:
+                    if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
+                        if lhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                            )
+                            break
+                        elif rhs_type.builtin not in int_promotion_table[int_type]:
+                            nonFatalError(
+                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                            )
+                            break
+                        else:
+                            new_builtin = int_type
+                            break
+            else:
+                nonFatalError(
+                    f"ERROR: Invalid operands {lhs_type}, {rhs_type} for binary operation"
+                )
+
+            lhs_class = getModifierClass(lhs_type.modifiers)
+            rhs_class = getModifierClass(rhs_type.modifiers)
+
+            lhs_exclusive = getExclusiveClass(lhs_class)
+            rhs_exclusive = getExclusiveClass(rhs_class)
+
+            if rhs_exclusive == ModifierClass.PERCENT:
+                return lhs_type
+            elif not rhs_exclusive:
+                return lhs_type
+            else:
+                nonFatalError(
+                    f"ERROR: Invalid rhs operand {rhs_type} must be either percent or scalar"
+                )
+        return Type(builtin=BuiltInTypes.VOID_TYPE)
 
     def resolveFunctionCall(tree: ASTNode, scope: Scope) -> Type:
         name = resolveIdentifier(tree.data.function, scope)
