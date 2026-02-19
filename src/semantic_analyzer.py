@@ -152,13 +152,13 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         BuiltInTypes.CHAR_TYPE: {BuiltInTypes.CHAR_TYPE, BuiltInTypes.BOOL_TYPE},
         BuiltInTypes.BOOL_TYPE: {BuiltInTypes.BOOL_TYPE},
     }
-    int_types = [
+    num_types = [
         BuiltInTypes.FLOAT_TYPE,
         BuiltInTypes.INT_TYPE,
         BuiltInTypes.CHAR_TYPE,
         BuiltInTypes.BOOL_TYPE,
     ]
-    strictly_int_types = [
+    int_types = [
         BuiltInTypes.INT_TYPE,
         BuiltInTypes.CHAR_TYPE,
         BuiltInTypes.BOOL_TYPE,
@@ -248,11 +248,15 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
 
     def resolveSweepStmt(tree: ASTNode, scope: Scope):
         expr = resolveExpression(tree.data.expr, scope)
+        if expr.builtin not in [BuiltInTypes.FLOAT_TYPE, BuiltInTypes.INT_TYPE]:
+            nonFatalError("ERROR: sweep statements only support numerical values")
         statement_stack.append(
             StatementInterrupt(kind=StatementInterruptType.SWITCH, node=tree)
         )
         for expr, node in tree.data.range_stmts:
             type = resolveExpression(expr, scope)
+            if type.builtin not in [BuiltInTypes.FLOAT_TYPE, BuiltInTypes.INT_TYPE]:
+                nonFatalError("ERROR: sweep statements only support numerical values")
             resolveStatement(node, scope)
         if tree.data.default_stmt:
             resolveStatement(tree.data.default_stmt, scope)
@@ -440,16 +444,16 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                     )
                 else:
                     new_builtin = BuiltInTypes.STRING_TYPE
-            elif lhs_type.builtin in int_types or rhs_type.builtin in int_types:
-                for int_type in int_types:
+            elif lhs_type.builtin in num_types or rhs_type.builtin in num_types:
+                for int_type in num_types:
                     if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
                         if lhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                                f"ERROR: Invalid lhs operand {lhs_type} must be numerical type"
                             )
                         elif rhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                                f"ERROR: Invalid rhs operand {rhs_type} must be numerical type"
                             )
                         else:
                             new_builtin = int_type
@@ -516,17 +520,17 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return Type(builtin=new_builtin, modifiers=new_modifiers)
 
         elif operator == ASTOperator.SUB_OPERATOR:
-            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
-                for int_type in int_types:
+            if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
+                for int_type in num_types:
                     if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
                         if lhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                                f"ERROR: Invalid lhs operand {lhs_type} must be numerical type"
                             )
                             break
                         elif rhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                                f"ERROR: Invalid rhs operand {rhs_type} must be numerical type"
                             )
                             break
                         else:
@@ -596,17 +600,17 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             elif ModifierClass.PARITY in rhs_class:
                 pass
         elif operator == ASTOperator.MULT_OPERATOR:
-            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
-                for int_type in int_types:
+            if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
+                for int_type in num_types:
                     if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
                         if lhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                                f"ERROR: Invalid lhs operand {lhs_type} must be numerical type"
                             )
                             break
                         elif rhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                                f"ERROR: Invalid rhs operand {rhs_type} must be numerical type"
                             )
                             break
                         else:
@@ -797,17 +801,17 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             return Type(builtin=new_builtin, modifiers=new_modifiers)
         elif operator == ASTOperator.DIV_OPERATOR:
-            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
-                for int_type in int_types:
+            if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
+                for int_type in num_types:
                     if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
                         if lhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                                f"ERROR: Invalid lhs operand {lhs_type} must be numerical type"
                             )
                             break
                         elif rhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                                f"ERROR: Invalid rhs operand {rhs_type} must be numerical type"
                             )
                             break
                         else:
@@ -982,11 +986,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             return Type(builtin=new_builtin, modifiers=new_modifiers)
         elif operator == ASTOperator.MOD_OPERATOR:
-            if (
-                lhs_type.builtin in strictly_int_types
-                or rhs_type.builtin in strictly_int_types
-            ):
-                for int_type in strictly_int_types:
+            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
+                for int_type in int_types:
                     if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
                         if lhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
@@ -1065,17 +1066,17 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             return Type(builtin=new_builtin, modifiers=new_modifiers)
         elif operator == ASTOperator.EXP_OPERATOR:
-            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
-                for int_type in int_types:
+            if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
+                for int_type in num_types:
                     if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
                         if lhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                                f"ERROR: Invalid lhs operand {lhs_type} must be numerical type"
                             )
                             break
                         elif rhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                                f"ERROR: Invalid rhs operand {rhs_type} must be numerical type"
                             )
                             break
                         else:
@@ -1107,7 +1108,7 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                     new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
                 elif ModifierTypes.ODD_TYPE in rhs_type.modifiers:
                     new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
-                elif lhs_type.builtin not in strictly_int_types:
+                elif lhs_type.builtin not in int_types:
                     nonFatalError(
                         f"ERROR: negative base for non integer exponent is invalid {lhs_type} and {rhs_type}"
                     )
@@ -1118,7 +1119,7 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                     new_modifiers.append(ModifierTypes.POSITIVE_TYPE)
                 elif ModifierTypes.ODD_TYPE in rhs_type.modifiers:
                     new_modifiers.append(ModifierTypes.NEGATIVE_TYPE)
-                elif lhs_type.builtin not in strictly_int_types:
+                elif lhs_type.builtin not in int_types:
                     nonFatalError(
                         f"ERROR: negative base for non integer exponent is invalid {lhs_type} and {rhs_type}"
                     )
@@ -1128,7 +1129,7 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             if ModifierClass.NONZERO in lhs_class:
                 if (
                     ModifierTypes.NEGATIVE_TYPE in lhs_type.modifiers
-                    and rhs_type.builtin not in strictly_int_types
+                    and rhs_type.builtin not in int_types
                 ):
                     nonFatalError(
                         f"ERROR: negative base for non integer exponent is invalid {lhs_type} and {rhs_type}"
@@ -1254,17 +1255,17 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             ASTOperator.MARKUP_OPERATOR,
             ASTOperator.MARKDOWN_OPERATOR,
         ]:
-            if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
-                for int_type in int_types:
+            if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
+                for int_type in num_types:
                     if lhs_type.builtin == int_type or rhs_type.builtin == int_type:
                         if lhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid lhs operand {lhs_type} must be integral type"
+                                f"ERROR: Invalid lhs operand {lhs_type} must be numerical type"
                             )
                             break
                         elif rhs_type.builtin not in int_promotion_table[int_type]:
                             nonFatalError(
-                                f"ERROR: Invalid rhs operand {rhs_type} must be integral type"
+                                f"ERROR: Invalid rhs operand {rhs_type} must be numerical type"
                             )
                             break
                         else:
@@ -1300,8 +1301,10 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return Type(builtin=BuiltInTypes.VOID_TYPE)
         elif operator == ASTOperator.POSITIVE_OPERATOR:
             operand_type_copy = copy.deepcopy(operand_type)
-            if operand.builtin not in int_types:
-                nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
+            if operand.builtin not in num_types:
+                nonFatalError(
+                    f"ERROR: Invalid operand {operand} must be numerical type"
+                )
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
             if ModifierTypes.NEGATIVE_TYPE in operand_type_copy.modifiers:
                 operand_type_copy.modifiers.remove(ModifierTypes.NEGATIVE_TYPE)
@@ -1309,8 +1312,10 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             return operand_type_copy
         elif operator == ASTOperator.NEGATIVE_OPERATOR:
             operand_type_copy = copy.deepcopy(operand_type)
-            if operand.builtin not in int_types:
-                nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
+            if operand.builtin not in num_types:
+                nonFatalError(
+                    f"ERROR: Invalid operand {operand} must be numerical type"
+                )
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
             if ModifierTypes.POSITIVE_TYPE in operand_type_copy.modifiers:
                 operand_type_copy.modifiers.remove(ModifierTypes.POSITIVE_TYPE)
@@ -1323,7 +1328,7 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             if operand.kind != ASTNodeType.IDENTIFIER:
                 nonFatalError("ERROR: left side of assignment must be l-value")
                 return operand_type
-            if operand_type.builtin not in strictly_int_types:
+            if operand_type.builtin not in int_types:
                 nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
             return operand_type
@@ -1334,7 +1339,7 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             if operand.kind != ASTNodeType.IDENTIFIER:
                 nonFatalError("ERROR: left side of assignment must be l-value")
                 return operand_type
-            if operand.builtin not in strictly_int_types:
+            if operand.builtin not in int_types:
                 nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
             return operand_type
