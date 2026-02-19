@@ -378,6 +378,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         type = tree.data.type
         is_auto: bool = ModifierClass.AUTO in getModifierClass(tree.data.type.modifiers)
         name = resolveIdentifier(tree.data.name, scope)
+        if type.builtin == BuiltInTypes.VOID_TYPE:
+            nonFatalError(f"ERROR: named variable {name} cannot be void type")
         expr = None
         if tree.data.expression:
             expr = resolveExpression(tree.data.expression, scope)
