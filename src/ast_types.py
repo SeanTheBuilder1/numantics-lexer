@@ -78,6 +78,7 @@ class ASTNode:
 @dataclass
 class IdentifierData:
     symbol: Symbol | None = None
+    type: Type | None = None
 
 
 @dataclass
@@ -95,6 +96,7 @@ class DeclarationData:
 @dataclass
 class LiteralData:
     literal_type: ASTLiteral
+    type: Type | None = None
 
 
 @dataclass
@@ -173,6 +175,7 @@ class FunctionCallData:
 class ArrayIndexData:
     array: ASTNode
     index: ASTNode
+    type: Type | None = None
 
 
 @dataclass
@@ -180,9 +183,11 @@ class BinaryOpData:
     lhs: ASTNode
     rhs: ASTNode
     operator: ASTOperator
+    type: Type | None = None
 
 
 @dataclass
 class UnaryOpData:
     operand: ASTNode
     operator: ASTOperator
+    type: Type | None = None

@@ -411,6 +411,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             if isinstance(symbol, Function):
                 nonFatalError("ERROR: Sole function cannot be used in expression")
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
+            else:
+                tree.data.type = symbol
             return symbol
         assert False
 
@@ -517,7 +519,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             elif ModifierClass.PARITY in rhs_class:
                 pass
-            return Type(builtin=new_builtin, modifiers=new_modifiers)
+            tree.data.type = type(builtin=new_builtin, modifiers=new_modifiers)
+            return tree.data.type
 
         elif operator == ASTOperator.SUB_OPERATOR:
             if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
@@ -599,6 +602,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             elif ModifierClass.PARITY in rhs_class:
                 pass
+            tree.data.type = Type(builtin=new_builtin, modifiers=new_modifiers)
+            return tree.data.type
         elif operator == ASTOperator.MULT_OPERATOR:
             if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
                 for int_type in num_types:
@@ -799,7 +804,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             elif ModifierClass.PARITY in rhs_class:
                 pass
-            return Type(builtin=new_builtin, modifiers=new_modifiers)
+            tree.data.type = Type(builtin=new_builtin, modifiers=new_modifiers)
+            return tree.data.type
         elif operator == ASTOperator.DIV_OPERATOR:
             if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
                 for int_type in num_types:
@@ -984,7 +990,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             elif ModifierClass.PARITY in rhs_class:
                 pass
-            return Type(builtin=new_builtin, modifiers=new_modifiers)
+            tree.data.type = Type(builtin=new_builtin, modifiers=new_modifiers)
+            return tree.data.type
         elif operator == ASTOperator.MOD_OPERATOR:
             if lhs_type.builtin in int_types or rhs_type.builtin in int_types:
                 for int_type in int_types:
@@ -1064,7 +1071,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 pass
             elif ModifierClass.PARITY in rhs_class:
                 pass
-            return Type(builtin=new_builtin, modifiers=new_modifiers)
+            tree.data.type = Type(builtin=new_builtin, modifiers=new_modifiers)
+            return tree.data.type
         elif operator == ASTOperator.EXP_OPERATOR:
             if lhs_type.builtin in num_types or rhs_type.builtin in num_types:
                 for int_type in num_types:
@@ -1176,7 +1184,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                     )
                     break
 
-            return Type(builtin=new_builtin)
+            tree.data.type = Type(builtin=new_builtin, modifiers=new_modifiers)
+            return tree.data.type
         elif operator in [
             ASTOperator.LESS_OPERATOR,
             ASTOperator.LESS_OR_EQUAL_OPERATOR,
@@ -1204,20 +1213,24 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                     )
                     break
 
-            return Type(builtin=new_builtin)
+            tree.data.type = Type(builtin=new_builtin)
+            return tree.data.type
         elif operator == ASTOperator.AND_OPERATOR:
             new_builtin = BuiltInTypes.BOOL_TYPE
-            return Type(builtin=new_builtin)
+            tree.data.type = Type(builtin=new_builtin)
+            return tree.data.type
         elif operator == ASTOperator.OR_OPERATOR:
             new_builtin = BuiltInTypes.BOOL_TYPE
-            return Type(builtin=new_builtin)
+            tree.data.type = Type(builtin=new_builtin)
+            return tree.data.type
         elif operator == ASTOperator.ASSIGNMENT_OPERATOR:
             if lhs.kind != ASTNodeType.IDENTIFIER:
                 nonFatalError("ERROR: left side of assignment must be l-value")
                 return lhs_type
             if not isTypeCastable(lhs_type, rhs_type):
                 nonFatalError(f"ERROR: {lhs_type} is not assignable to {rhs}")
-            return lhs
+            tree.data.type = lhs_type
+            return tree.data.type
 
         elif operator in [
             ASTOperator.PLUS_ASSIGNMENT_OPERATOR,
@@ -1249,7 +1262,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                     operator=ASTOperator.ASSIGNMENT_OPERATOR,
                 ),
             )
-            return resolveBinaryOp(pseudo_assignment_op_node, scope)
+            tree.data.type = resolveBinaryOp(pseudo_assignment_op_node, scope)
+            return tree.data.type
         elif operator in [
             ASTOperator.PERCENT_SCALE_OPERATOR,
             ASTOperator.MARKUP_OPERATOR,
@@ -1283,9 +1297,11 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             rhs_exclusive = getExclusiveClass(rhs_class)
 
             if rhs_exclusive == ModifierClass.PERCENT:
-                return lhs_type
+                tree.data.type = lhs_type
+                return tree.data.type
             elif not rhs_exclusive:
-                return lhs_type
+                tree.data.type = lhs_type
+                return tree.data.type
             else:
                 nonFatalError(
                     f"ERROR: Invalid rhs operand {rhs_type} must be either percent or scalar"
@@ -1300,13 +1316,13 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             nonFatalError("ERROR: void type is invalid operand for unary operation")
             return Type(builtin=BuiltInTypes.VOID_TYPE)
         elif operator == ASTOperator.POSITIVE_OPERATOR:
-            operand_type_copy = copy.deepcopy(operand_type)
             if operand.builtin not in num_types:
                 nonFatalError(
                     f"ERROR: Invalid operand {operand} must be numerical type"
                 )
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
-            return operand_type_copy
+            tree.data.type = operand_type
+            return tree.data.type
         elif operator == ASTOperator.NEGATIVE_OPERATOR:
             operand_type_copy = copy.deepcopy(operand_type)
             if operand.builtin not in num_types:
@@ -1317,7 +1333,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             if ModifierTypes.POSITIVE_TYPE in operand_type_copy.modifiers:
                 operand_type_copy.modifiers.remove(ModifierTypes.POSITIVE_TYPE)
                 operand_type_copy.modifiers.append(ModifierTypes.NEGATIVE_TYPE)
-            return operand_type_copy
+            tree.data.type = operand_type_copy
+            return tree.data.type
         elif operator in [
             ASTOperator.PRE_INCREMENT_OPERATOR,
             ASTOperator.PRE_DECREMENT_OPERATOR,
@@ -1328,7 +1345,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             if operand_type.builtin not in int_types:
                 nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
-            return operand_type
+            tree.data.type = operand_type
+            return tree.data.type
         elif operator in [
             ASTOperator.POST_INCREMENT_OPERATOR,
             ASTOperator.POST_DECREMENT_OPERATOR,
@@ -1339,9 +1357,11 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             if operand.builtin not in int_types:
                 nonFatalError(f"ERROR: Invalid operand {operand} must be integral type")
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
-            return operand_type
+            tree.data.type = operand_type
+            return tree.data.type
         elif operator == ASTOperator.NOT_OPERATOR:
-            return Type(builtin=BuiltInTypes.BOOL_TYPE)
+            tree.data.type = Type(builtin=BuiltInTypes.BOOL_TYPE)
+            return tree.data.type
         return Type(builtin=BuiltInTypes.VOID_TYPE)
 
     def resolveFunctionCall(tree: ASTNode, scope: Scope) -> Type:
@@ -1372,28 +1392,30 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                 nonFatalError(
                     f"ERROR: Argument type {arg} cannot be assigned to parameter type {param}"
                 )
-        return symbol.type.return_type
+        tree.data.type = symbol.type.return_type
+        return tree.data.type
 
     def resolveArrayIndex(tree: ASTNode, scope: Scope) -> Type:
         if tree.data.array:
             array = resolveExpression(tree.data.array, scope)
-            return array
-        pass
+            tree.data.type = array
+            return tree.data.type
 
     def resolveLiteral(tree: ASTNode, scope: Scope) -> Type:
         if tree.data.literal_type == ASTLiteral.TRUE_LITERAL:
-            return Type(builtin=BuiltInTypes.BOOL_TYPE)
+            tree.data.type = Type(builtin=BuiltInTypes.BOOL_TYPE)
         elif tree.data.literal_type == ASTLiteral.FALSE_LITERAL:
-            return Type(builtin=BuiltInTypes.BOOL_TYPE)
+            tree.data.type = Type(builtin=BuiltInTypes.BOOL_TYPE)
         elif tree.data.literal_type == ASTLiteral.INT_LITERAL:
-            return Type(builtin=BuiltInTypes.INT_TYPE)
+            tree.data.type = Type(builtin=BuiltInTypes.INT_TYPE)
         elif tree.data.literal_type == ASTLiteral.FLOAT_LITERAL:
-            return Type(builtin=BuiltInTypes.FLOAT_TYPE)
+            tree.data.type = Type(builtin=BuiltInTypes.FLOAT_TYPE)
         elif tree.data.literal_type == ASTLiteral.CHAR_LITERAL:
-            return Type(builtin=BuiltInTypes.CHAR_TYPE)
+            tree.data.type = Type(builtin=BuiltInTypes.CHAR_TYPE)
         elif tree.data.literal_type == ASTLiteral.STRING_LITERAL:
-            return Type(builtin=BuiltInTypes.STRING_TYPE)
-        return Type(builtin=BuiltInTypes.VOID_TYPE)
+            tree.data.type = Type(builtin=BuiltInTypes.STRING_TYPE)
+        assert tree.data.type
+        return tree.data.type
 
     def resolveSymbol(tree: ASTNode, scope: Scope) -> Type | Function:
         name = resolveIdentifier(tree, scope)
