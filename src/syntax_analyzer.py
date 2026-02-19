@@ -1718,10 +1718,17 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
         if error:
             return recoverFunctionStmt(Error(error))
 
-        result = parseParameterList()
-        if isinstance(result, Error):
-            return recoverFunctionStmt(result)
-        node.children.append(result.ok_value())
+        if current_token.type != TokenType.VERTICAL_BAR_DELIMITER:
+            result = parseParameterList()
+            if isinstance(result, Error):
+                return recoverFunctionStmt(result)
+            node.children.append(result.ok_value())
+        else:
+            node.children.append(
+                Node(
+                    NodeType.PARAMETER_LIST, children=[], token=checkToken(), data=None
+                )
+            )
 
         error = expect(TokenType.VERTICAL_BAR_DELIMITER, "'|' expected in function")
         if error:
