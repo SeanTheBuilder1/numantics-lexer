@@ -360,6 +360,7 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             resolveType(type, scope)
             symbol = Symbol(name=name, type=type, scope=tree.scope)
             params.append(Parameter(type, name))
+            define(tree.scope, name, symbol)
         symbol = Symbol(
             name=func_name,
             type=Function(return_type=tree.data.return_type, parameters=params),
