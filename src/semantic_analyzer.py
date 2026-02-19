@@ -1690,5 +1690,4 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             resolveFunctionStmt(node, scope)
         elif node.kind == ASTNodeType.DECLARATION:
             resolveDeclaration(node, scope)
-    print(scope.pretty())
     return scope, has_error
