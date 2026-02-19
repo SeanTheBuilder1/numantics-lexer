@@ -1306,9 +1306,6 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
                     f"ERROR: Invalid operand {operand} must be numerical type"
                 )
                 return Type(builtin=BuiltInTypes.VOID_TYPE)
-            if ModifierTypes.NEGATIVE_TYPE in operand_type_copy.modifiers:
-                operand_type_copy.modifiers.remove(ModifierTypes.NEGATIVE_TYPE)
-                operand_type_copy.modifiers.append(ModifierTypes.POSITIVE_TYPE)
             return operand_type_copy
         elif operator == ASTOperator.NEGATIVE_OPERATOR:
             operand_type_copy = copy.deepcopy(operand_type)
