@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any
+from llvmlite import ir
 from lexer_token import Token
 from semantic_types import Scope, Symbol, Type
 
@@ -112,6 +113,7 @@ class SwitchStmtData:
     expr: ASTNode
     case_stmts: list[tuple[ASTNode, ASTNode]]
     default_stmt: ASTNode | None
+    merge: ir.Block | None = None
 
 
 @dataclass
@@ -119,6 +121,7 @@ class SweepStmtData:
     expr: ASTNode
     range_stmts: list[tuple[ASTNode, ASTNode]]
     default_stmt: ASTNode | None
+    merge: ir.Block | None = None
 
 
 @dataclass
@@ -126,6 +129,8 @@ class WhileStmtData:
     left_expr: ASTNode
     right_expr: ASTNode | None
     block: ASTNode
+    merge: ir.Block | None = None
+    cond: ir.Block | None = None
 
 
 @dataclass
@@ -142,6 +147,8 @@ class ForStmtData:
     condition: ASTNode | None
     update: ASTNode | None
     block: ASTNode
+    merge: ir.Block | None = None
+    cond: ir.Block | None = None
 
 
 @dataclass

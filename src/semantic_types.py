@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from llvmlite import ir
 from lexer_token import Token, TokenType
 
 
@@ -93,6 +94,7 @@ class Parameter:
 class Function:
     return_type: Type
     parameters: list[Parameter]
+    func_ir: ir.Function | None = None
 
 
 @dataclass
@@ -135,7 +137,8 @@ class Scope:
 class Symbol:
     name: str
     type: Type | Function
-    scope: Scope | None
+    scope: Scope
+    ptr: ir.Value | None = None
 
 
 def mapTokenToBuiltInType(token: Token) -> BuiltInTypes | None:
