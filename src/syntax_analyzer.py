@@ -799,10 +799,11 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
         error = expect(TokenType.RETURN_STATEMENT, "return expected")
         if error:
             return Error(error)
-        result = parseExpression()
-        if isinstance(result, Error):
-            return result
-        node.children.append(result.ok_value())
+        if current_token.type != TokenType.SEMI_COLON_DELIMITER:
+            result = parseExpression()
+            if isinstance(result, Error):
+                return result
+            node.children.append(result.ok_value())
         error = expect(
             TokenType.SEMI_COLON_DELIMITER, "';' expected in return statement"
         )
