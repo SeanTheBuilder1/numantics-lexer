@@ -1582,10 +1582,7 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         is_builtin_castable = False
         if dest.builtin == src.builtin:
             is_builtin_castable = True
-        elif (
-            dest.builtin == BuiltInTypes.FLOAT_TYPE
-            and src.builtin == BuiltInTypes.INT_TYPE
-        ):
+        elif dest.builtin in num_types and src.builtin in num_types:
             is_builtin_castable = True
         elif (
             dest.builtin == BuiltInTypes.INT_TYPE
@@ -1599,11 +1596,6 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
             BuiltInTypes.CHAR_TYPE,
             BuiltInTypes.STRING_TYPE,
         ]:
-            is_builtin_castable = True
-        elif (
-            dest.builtin == BuiltInTypes.INT_TYPE
-            and src.builtin == BuiltInTypes.CHAR_TYPE
-        ):
             is_builtin_castable = True
         else:
             return False
