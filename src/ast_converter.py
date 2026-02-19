@@ -272,14 +272,14 @@ def convertSweepStmt(tree: Node) -> ASTNode:
     expr_node = tree.children[0]
     expr = convertExpression(expr_node)
     body = tree.children[1]
-    cases = []
+    ranges = []
     default = None
     for node in body.children:
-        if node.kind == NodeType.SWEEP_CASE:
+        if node.kind == NodeType.SWEEP_RANGE:
             assert len(node.children) == 2
-            case_expr = convertExpression(node.children[0])
-            case_block = convertStatement(node.children[1])
-            cases.append((case_expr, case_block))
+            range_expr = convertExpression(node.children[0])
+            range_block = convertStatement(node.children[1])
+            ranges.append((range_expr, range_block))
 
         elif node.kind == NodeType.SWEEP_DEFAULT:
             assert len(node.children) == 1
@@ -289,7 +289,7 @@ def convertSweepStmt(tree: Node) -> ASTNode:
     return ASTNode(
         kind=ASTNodeType.SWEEP_STMT,
         token=tree.token,
-        data=SweepStmtData(expr, case_stmts=cases, default_stmt=default),
+        data=SweepStmtData(expr, range_stmts=ranges, default_stmt=default),
     )
 
 

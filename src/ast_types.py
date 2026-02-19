@@ -115,7 +115,7 @@ class SwitchStmtData:
 @dataclass
 class SweepStmtData:
     expr: ASTNode
-    case_stmts: list[tuple[ASTNode, ASTNode]]
+    range_stmts: list[tuple[ASTNode, ASTNode]]
     default_stmt: ASTNode | None
 
 

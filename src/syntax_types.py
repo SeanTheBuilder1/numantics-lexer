@@ -57,7 +57,7 @@ class NodeType(Enum):
     SWITCH_DEFAULT = auto()
     SWEEP_STMT = auto()
     SWEEP_BODY = auto()
-    SWEEP_CASE = auto()
+    SWEEP_RANGE = auto()
     SWEEP_DEFAULT = auto()
     WHILE_STMT = auto()
     FUNCTION_STMT = auto()

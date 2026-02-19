@@ -528,7 +528,7 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
             if isinstance(result, Error):
                 return result
             node.children.append(result.ok_value())
-            while checkToken().type == TokenType.CASE_STATEMENT:
+            while checkToken().type == TokenType.RANGE_STATEMENT:
                 result = parseSweepCase()
                 if isinstance(result, Error):
                     return result
@@ -547,10 +547,10 @@ def parseFile(tokens: list[Token]) -> tuple[Node, bool]:
 
     def parseSweepCase() -> Result[Node, Node]:
         node = Node(
-            kind=NodeType.SWEEP_CASE, children=[], token=checkToken(), data=None
+            kind=NodeType.SWEEP_RANGE, children=[], token=checkToken(), data=None
         )
 
-        error = expect(TokenType.CASE_STATEMENT, "case expected in sweep")
+        error = expect(TokenType.RANGE_STATEMENT, "range expected in sweep")
         if error:
             return Error(error)
 

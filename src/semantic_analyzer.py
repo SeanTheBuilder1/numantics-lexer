@@ -251,8 +251,8 @@ def resolveFile(tree: ASTNode, code: str) -> tuple[Scope, bool]:
         statement_stack.append(
             StatementInterrupt(kind=StatementInterruptType.SWITCH, node=tree)
         )
-        for expr, node in tree.data.case_stmts:
-            resolveExpression(expr, scope)
+        for expr, node in tree.data.range_stmts:
+            type = resolveExpression(expr, scope)
             resolveStatement(node, scope)
         if tree.data.default_stmt:
             resolveStatement(tree.data.default_stmt, scope)
